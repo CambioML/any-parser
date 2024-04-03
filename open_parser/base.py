@@ -3,13 +3,13 @@ import json
 import requests
 
 CAMBIO_UPLOAD_URL = (
-    "https://p1iz3c1c77.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"
+    "https://nl6h9ycq39.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"
 )
 CAMBIO_EXTRACT_URL = (
-    "https://p1iz3c1c77.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract"
+    "https://nl6h9ycq39.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract"
 )
 CAMBIO_PARSE_URL = (
-    "https://p1iz3c1c77.execute-api.us-west-2.amazonaws.com/v1/cambio_api/parse"
+    "https://nl6h9ycq39.execute-api.us-west-2.amazonaws.com/v1/cambio_api/parse"
 )
 
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "open-parser"
-version = "0.0.1"
+version = "0.0.2"
 description = "Open parser for all."
 authors = ["CambioML <wanwanaiai45@gmail.com>"]
 maintainers = ["Rachel Hu <goldpiggy@berkeley.edu>"]
@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8,<3.13"
 requests = "^2.25.0"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]
