@@ -18,12 +18,12 @@ if __name__ == "__main__":
 
     op = OpenParser(example_apikey)
 
-    print("file content extraction test:")
+    print("file/document extraction test:")
     content_result = op.extract(example_local_file)
     print(type(content_result))
     print(content_result)
 
-    print("file information QA test:")
+    print("information extraction test:")
     example_prompt = "Return table under Investor Metrics in JSON format with year as the key and the column as subkeys."
     qa_result = op.parse(example_local_file, example_prompt)
     print(type(qa_result))
