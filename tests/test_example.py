@@ -6,7 +6,14 @@ if __name__ == "__main__":
     example_local_file = "./schedule.pdf"
 
     op = OpenParser(example_apikey)
-    result = op.extract_pdf_content(example_local_file)
 
-    print(type(result))
-    print(result)
+    print("file content extraction test:")
+    content_result = op.extract(example_local_file)
+    print(type(content_result))
+    print(content_result)
+
+    print("file information QA test:")
+    example_prompt = "This is a test, simply return filename and 'test'"
+    qa_result = op.parse(example_local_file, example_prompt)
+    print(type(qa_result))
+    print(qa_result)
