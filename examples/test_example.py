@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     example_apikey = os.getenv("CAMBIO_API_KEY")
 
-    example_local_file = "./test2.pdf"
+    example_local_file = "./sample_data/test2.pdf"
 
     op = OpenParser(example_apikey)
 
@@ -25,6 +25,6 @@ if __name__ == "__main__":
 
     print("information extraction test:")
     example_prompt = "Return table under Investor Metrics in JSON format with year as the key and the column as subkeys."
-    qa_result = op.parse(example_local_file, example_prompt)
+    qa_result = op.parse(example_local_file, example_prompt, mode="basic")
     print(type(qa_result))
     print(qa_result)

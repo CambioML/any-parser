@@ -28,9 +28,9 @@ class OpenParser:
         result = self._request_file_extraction(user_id, job_id, s3_key)
         return result["file_content"]
 
-    def parse(self, file_path, prompt):
+    def parse(self, file_path, prompt, mode="advanced"):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path, prompt)
-        result = self._request_info_extraction(user_id, job_id, s3_key)
+        result = self._request_info_extraction(user_id, job_id, s3_key, mode)
         return result["results"]
 
     def _error_handler(self, response):
@@ -77,11 +77,14 @@ class OpenParser:
 
         self._error_handler(response)
 
-    def _request_info_extraction(self, user_id, job_id, s3_key):
+    def _request_info_extraction(self, user_id, job_id, s3_key, mode):
+        if mode not in ["advanced", "basic"]:
+            raise ValueError("Invalid mode. Choose either 'advanced' or 'basic'.")
         payload = {
             "userId": user_id,
             "jobId": job_id,
             "fileKey": s3_key,
+            "extract": True if mode == "advanced" else False,
         }
         response = requests.post(
             self._parseurl, headers=self._request_header, json=payload
