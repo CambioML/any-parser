@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     example_apikey = os.getenv("CAMBIO_API_KEY")
 
-    example_local_file = "./test2.pdf"
+    example_local_file = "./sample_data/test2.pdf"
 
     op = OpenParser(example_apikey)
 
