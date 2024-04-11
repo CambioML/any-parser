@@ -29,8 +29,8 @@ class OpenParser:
         return result["file_content"]
 
     def parse(self, file_path, prompt, mode="advanced"):
-        user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path, prompt)
-        result = self._request_info_extraction(user_id, job_id, s3_key, mode)
+        user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
+        result = self._request_info_extraction(user_id, job_id, s3_key, mode, prompt)
         return result["results"]
 
     def _error_handler(self, response):
@@ -41,8 +41,8 @@ class OpenParser:
         else:
             raise Exception(f"Error: {response.status_code} {response.text}")
 
-    def _request_and_upload_by_apiKey(self, file_path, prompt=""):
-        params = {"fileName": file_path, "prompt": prompt}
+    def _request_and_upload_by_apiKey(self, file_path):
+        params = {"fileName": file_path}
         response = requests.get(
             self._uploadurl, headers=self._request_header, params=params
         )
@@ -77,14 +77,15 @@ class OpenParser:
 
         self._error_handler(response)
 
-    def _request_info_extraction(self, user_id, job_id, s3_key, mode):
+    def _request_info_extraction(self, user_id, job_id, s3_key, mode, prompt=""):
         if mode not in ["advanced", "basic"]:
             raise ValueError("Invalid mode. Choose either 'advanced' or 'basic'.")
         payload = {
             "userId": user_id,
             "jobId": job_id,
             "fileKey": s3_key,
-            "extract": True if mode == "advanced" else False,
+            "user_prompt": prompt,
+            "use_textract": True if mode == "advanced" else False,
         }
         response = requests.post(
             self._parseurl, headers=self._request_header, json=payload
