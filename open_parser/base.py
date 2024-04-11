@@ -31,7 +31,7 @@ class OpenParser:
     def parse(self, file_path, prompt, mode="advanced"):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
         result = self._request_info_extraction(user_id, job_id, s3_key, mode, prompt)
-        return result["results"]
+        return result
 
     def _error_handler(self, response):
         if response.status_code == 403:
