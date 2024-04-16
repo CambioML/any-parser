@@ -26,12 +26,12 @@ class OpenParser:
     def extract(self, file_path):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
         result = self._request_file_extraction(user_id, job_id, s3_key)
-        return result["file_content"]
+        return json.loads(result)["result"]["file_content"]
 
     def parse(self, file_path, prompt, mode="advanced"):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
         result = self._request_info_extraction(user_id, job_id, s3_key, mode, prompt)
-        return result
+        return json.loads(result)["result"]
 
     def _error_handler(self, response):
         if response.status_code == 403:
@@ -73,7 +73,7 @@ class OpenParser:
 
         if response.status_code == 200:
             print("Extraction success.")
-            return json.loads(response.json()["result"])
+            return response.text
 
         self._error_handler(response)
 
@@ -93,6 +93,6 @@ class OpenParser:
 
         if response.status_code == 200:
             print("Extraction success.")
-            return json.loads(response.json()["result"])
+            return response.text
 
         self._error_handler(response)
