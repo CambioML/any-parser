@@ -23,6 +23,11 @@ conda activate openparse
 pip3 install open_parser
 ```
 
+## :bashfile usage
+
+```
+bash open_parser.sh <your apiKey> <job type: extract | parse> <file path> <prompt for parse (optional, default="")> <parse mode (optional, default=basic): basic | advanced>
+```
 ## :scroll:  Examples
 
 OpenParse can extract text, numbers and symbols from PDF, images, etc. Check out each notebook below to run OpenParse within 10 lines of code!
