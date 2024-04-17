@@ -31,8 +31,7 @@ bash parse.sh <your apiKey> <file path> <prompt for parse (optional, default="")
 
 For example, to extract a table from a PDF file, you can run the following command:
 ```
-bash parse.sh gl**************************************  /path/to/your/file.pdf "Return the table in a JSON format with
- each box's key and value."
+bash parse.sh gl**************************************  /path/to/your/file.pdf "Return the table in a JSON format with each box's key and value."
 ```
 
 ## :scroll:  Examples
