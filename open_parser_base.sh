@@ -1,5 +1,5 @@
-UPLOAD_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"  
-EXTRACT_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract" 
+UPLOAD_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"
+EXTRACT_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract"
 PARSE_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/parse"
 
 uid="null"
@@ -30,13 +30,6 @@ upload() {
         exit 1
     fi
 
-    # res=$(echo "$tmp_data" | jq -r 'to_entries | map("-F \"\(.key)=\(.value)\" \\ ") | .[] ')    
-    # echo "${res[@]}"
-    # local status=$(curl -X POST \
-    #     "${res[@]}" \
-    #     -F "file=@$file_path" \
-    #     "$tmp_url")
-
     local aws_access_key_id=$(echo "$tmp_data" | jq -r '."AWSAccessKeyId"')
     local x_amz_security_token=$(echo "$tmp_data" | jq -r '."x-amz-security-token"')
     local policy=$(echo "$tmp_data" | jq -r '."policy"')
@@ -60,8 +53,6 @@ upload() {
         -F "x-amz-meta-user_prompt=$x_amz_meta_user_prompt" \
         -F "file=@$file_path" \
         "$tmp_url")
-    
-    # echo "upload done"
 }
 
 extract() {
@@ -76,7 +67,6 @@ extract() {
                     -d "$payload" \
                     "$EXTRACT_URL")
 
-    # echo "$response" 
     result=$(echo "$response" | jq -r '.result.file_content')
 }
 
@@ -94,28 +84,5 @@ parse() {
                     -d "$payload" \
                     "$PARSE_URL")
 
-    # echo "$response" 
     result=$(echo "$response" | jq -r '.result')
 }
-
-
-apiKey="$1"
-func="$2"
-file_path="$3"
-
-upload
-if [ "$func" == "extract" ]; then
-    extract
-elif [ "$func" == "parse" ]; then
-    prompt="$4"
-    mode="$5"
-    if [ -z "$mode" ] || [ "$mode" == "" ] || [ "$mode" == "advanced" ]; then
-        textract=true
-    else
-        textract=false
-    fi
-    upload
-    parse
-fi
-
-echo "$result"
