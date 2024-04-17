@@ -24,10 +24,16 @@ pip3 install open_parser
 ```
 
 ## :bashfile usage
+To use OpenParse via `curl` requests, you can run the following bash command from the root folder of this repository:
+```
+bash parse.sh <your apiKey> <file path> <prompt for parse (optional, default="")>
+```
 
+For example, to extract a table from a PDF file, you can run the following command:
 ```
-bash open_parser.sh <your apiKey> <job type: extract | parse> <file path> <prompt for parse (optional, default="")> <parse mode (optional, default=basic): basic | advanced>
+bash parse.sh gl**************************************  /path/to/your/file.pdf "Return the table in a JSON format with each box's key and value."
 ```
+
 ## :scroll:  Examples
 
 OpenParse can extract text, numbers and symbols from PDF, images, etc. Check out each notebook below to run OpenParse within 10 lines of code!
