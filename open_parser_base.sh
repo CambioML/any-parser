@@ -67,7 +67,7 @@ extract() {
                     -d "$payload" \
                     "$EXTRACT_URL")
 
-    result=$(echo "$response" | jq -r '.result.file_content')
+    result=$(echo "$response" | jq -r '.result')
 }
 
 parse() {
