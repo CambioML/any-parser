@@ -18,9 +18,9 @@ elif [ "$func" == "parse" ]; then
     prompt="$4"
     mode="$5"
     if [ -z "$mode" ] || [ "$mode" == "" ] || [ "$mode" == "advanced" ]; then
-        textract=true
+        textract="True"
     else
-        textract=false
+        textract="False"
     fi
     upload
     parse
