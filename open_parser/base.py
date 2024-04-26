@@ -26,7 +26,7 @@ class OpenParser:
     def extract(self, file_path):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
         result = self._request_file_extraction(user_id, job_id, s3_key)
-        return json.loads(result)["result"]["file_content"]
+        return json.loads(result)["result"]
 
     def parse(self, file_path, prompt, mode="advanced"):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
@@ -85,7 +85,7 @@ class OpenParser:
             "jobId": job_id,
             "fileKey": s3_key,
             "user_prompt": prompt,
-            "use_textract": True if mode == "advanced" else False,
+            "use_textract": "True" if mode == "advanced" else "False",
         }
         response = requests.post(
             self._parseurl, headers=self._request_header, json=payload
