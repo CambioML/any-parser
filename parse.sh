@@ -10,7 +10,7 @@ fi
 apiKey="$1"
 file_path="$2"
 prompt="$3"
-textract=false
+textract="False"
 
 echo "Parsing $file_path..."
 

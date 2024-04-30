@@ -11,16 +11,16 @@ apiKey="$1"
 func="$2"
 file_path="$3"
 
-upload
 if [ "$func" == "extract" ]; then
+    upload
     extract
 elif [ "$func" == "parse" ]; then
     prompt="$4"
     mode="$5"
     if [ -z "$mode" ] || [ "$mode" == "" ] || [ "$mode" == "advanced" ]; then
-        textract=true
+        textract="True"
     else
-        textract=false
+        textract="False"
     fi
     upload
     parse
