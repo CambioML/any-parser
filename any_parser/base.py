@@ -13,7 +13,7 @@ CAMBIO_PARSE_URL = (
 )
 
 
-class OpenParser:
+class AnyParser:
     def __init__(self, apiKey) -> None:
         self._uploadurl = CAMBIO_UPLOAD_URL
         self._extracturl = CAMBIO_EXTRACT_URL
