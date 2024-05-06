@@ -1,5 +1,5 @@
 #!/bin/bash
-source open_parser_base.sh
+source any_parser_base.sh
 
 if [ "$#" -lt 3 ]; then
     echo "Error: Missing arguments

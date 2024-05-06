@@ -26,7 +26,7 @@ repos:
           - "--remove-duplicate-keys"
           - "--remove-unused-variables"
           - "--remove-all-unused-imports"
-        exclude: "open-parser/__init__.py"
+        exclude: "any-parser/__init__.py"
 
   # run all unittests
   - repo: local
