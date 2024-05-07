@@ -164,3 +164,7 @@ cython_debug/
 
 # vscode
 .vscode/
+
+# data/
+*.xlsx
+*.csv
