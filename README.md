@@ -23,7 +23,7 @@ conda activate any-parse
 pip3 install any-parser
 ```
 
-## :bashfile usage
+## bashfile usage
 To use AnyParser via `curl` requests, you can run the following bash command from the root folder of this repository:
 ```
 bash parse.sh <your apiKey> <file path> <prompt for parse (optional, default="")>
@@ -38,8 +38,8 @@ bash parse.sh gl**************************************  /path/to/your/file.pdf "
 
 AnyParser can extract text, numbers and symbols from PDF, images, etc. Check out each notebook below to run AnyParser within 10 lines of code!
 
-### [Prompt to Extract Key-values into JSON from W2 (PDF)](https://github.com/CambioML/any-parser/blob/main/examples/prompt_to_extract_table_from_pdf_to_json.ipynb)
-Do you want to extract key-values from a W2 PDF into JSON format? Check out this notebook (3-min read)!
+### [Extract a Table from PDF into Excel](https://github.com/CambioML/any-parser/blob/main/demo/pdf_to_html_to_excel.ipynb)
+Do you want to extract a complicated table from a financial report (PDF) into Excel spread sheet? Check out this notebook (3-min read)!
 
 ### [Extract a Table from an Image into Markdown Format](https://github.com/CambioML/any-parser/blob/main/examples/extract_table_from_image_to_markdown.ipynb)
 Are you a financial analyst who need to extract ACCURATE number from a table in an image or a PDF. Check out this notebook (3-min read)!
