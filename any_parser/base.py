@@ -28,7 +28,7 @@ class AnyParser:
         result = self._request_file_extraction(user_id, job_id, s3_key)
         return json.loads(result)["result"]
 
-    def parse(self, file_path, prompt, mode="advanced"):
+    def parse(self, file_path, prompt="", mode="advanced"):
         user_id, job_id, s3_key = self._request_and_upload_by_apiKey(file_path)
         result = self._request_info_extraction(user_id, job_id, s3_key, mode, prompt)
         return json.loads(result)["result"]
@@ -56,7 +56,7 @@ class AnyParser:
                 upload_response = requests.post(
                     url_info["url"], data=url_info["fields"], files=files
                 )
-            print(f"Upload response: {upload_response.status_code}")
+            # print(f"Upload response: {upload_response.status_code}")
             return uid, jid, url_info["fields"]["key"]
 
         self._error_handler(response)
@@ -72,7 +72,7 @@ class AnyParser:
         )
 
         if response.status_code == 200:
-            print("Extraction success.")
+            # print("Extraction success.")
             return response.text
 
         self._error_handler(response)
@@ -92,7 +92,7 @@ class AnyParser:
         )
 
         if response.status_code == 200:
-            print("Extraction success.")
+            # print("Extraction success.")
             return response.text
 
         self._error_handler(response)
