@@ -1,6 +1,7 @@
 UPLOAD_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"
 EXTRACT_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract"
 PARSE_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/parse"
+INSTRUCT_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/instruction"
 
 uid="null"
 jid="null"
@@ -83,6 +84,23 @@ parse() {
                     -H "x-api-key: $apiKey" \
                     -d "$payload" \
                     "$PARSE_URL")
+
+    result=$(echo "$response" | jq -r '.result')
+}
+
+instruct() {
+    local payload='{
+        "userId": "'"$uid"'",
+        "jobId": "'"$jid"'",
+        "fileKey": "'"$s3_key"'",
+        "user_prompt": "'"$prompt"'",
+        "use_textract": "'"$textract"'"
+    }'
+
+    local response=$(curl -s -X POST \
+                    -H "x-api-key: $apiKey" \
+                    -d "$payload" \
+                    "$INSTRUCT_URL")
 
     result=$(echo "$response" | jq -r '.result')
 }
