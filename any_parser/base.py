@@ -95,8 +95,7 @@ class AnyParser:
             "userId": user_id,
             "jobId": job_id,
             "fileKey": s3_key,
-            "user_prompt": prompt,
-            "use_textract": "True" if mode == "advanced" else "False",
+            "userPrompt": prompt,
         }
         response = requests.post(
             self._parseurl, headers=self._request_header, json=payload
@@ -115,8 +114,7 @@ class AnyParser:
             "userId": user_id,
             "jobId": job_id,
             "fileKey": s3_key,
-            "user_prompt": prompt,
-            "use_textract": "True" if mode == "advanced" else "False",
+            "userPrompt": prompt,
         }
         response = requests.post(
             self._instructurl, headers=self._request_header, json=payload
