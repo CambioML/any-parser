@@ -24,7 +24,12 @@ if __name__ == "__main__":
     print(content_result)
 
     print("information extraction test:")
-    example_prompt = "Return table under Investor Metrics in JSON format with year as the key and the column as subkeys."
-    qa_result = op.parse(example_local_file, example_prompt, mode="basic")
+    qa_result = op.parse(example_local_file)
     print(type(qa_result))
     print(qa_result)
+
+    print("instruction extraction test:")
+    example_prompt = "Return table under Investor Metrics in JSON format with year as the key and the column as subkeys."
+    instruction_result = op.instruct(example_local_file, prompt=example_prompt)
+    print(type(instruction_result))
+    print(instruction_result)
