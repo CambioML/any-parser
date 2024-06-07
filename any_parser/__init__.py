@@ -2,4 +2,4 @@ from any_parser.base import AnyParser
 
 __all__ = ["AnyParser"]
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"
