@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 
 import requests
 
-CAMBIO_UPLOAD_URL = "https://hp2i14jwa7.execute-api.us-west-2.amazonaws.com/v1/upload"
-CAMBIO_REQUEST_URL = "https://hp2i14jwa7.execute-api.us-west-2.amazonaws.com/v1/request"
-CAMBIO_QUERY_URL = "https://hp2i14jwa7.execute-api.us-west-2.amazonaws.com/v1/query"
+CAMBIO_UPLOAD_URL = "https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/upload"
+CAMBIO_REQUEST_URL = "https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/request"
+CAMBIO_QUERY_URL = "https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/query"
 
 
 class AnyParser:
@@ -14,8 +14,8 @@ class AnyParser:
         self._requesturl = CAMBIO_REQUEST_URL
         self._queryurl = CAMBIO_QUERY_URL
         self._request_header = {
-            "authorizationToken": "-",
-            "apiKey": apiKey,
+            "authorizationtoken": "-",
+            "apikey": apiKey,
         }
         self.timeout = 60
 
