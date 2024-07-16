@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 
 import requests
 
-CAMBIO_UPLOAD_URL = "https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/upload"
-CAMBIO_REQUEST_URL = "https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/request"
-CAMBIO_QUERY_URL = "https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/query"
+CAMBIO_UPLOAD_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/upload"
+CAMBIO_REQUEST_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/request"
+CAMBIO_QUERY_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/query"
 
 
 class AnyParser:
