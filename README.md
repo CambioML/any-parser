@@ -4,7 +4,7 @@ AnyParser provides an API to accurately extract your unstructured data (e.g. PDF
 
 ## :seedling: Set up your AnyParser API key
 
-AnyParser is still in private beta. If you are interested in testing our document models, please reach out at info@cambioml.com for a FREE API key.
+AnyParser is still in private beta. If you are interested in testing our document models, please reach out at info@cambioml.com for a FREE testing API key.
 
 
 To set up your API key `CAMBIO_API_KEY`, you will need to :
@@ -12,7 +12,7 @@ To set up your API key `CAMBIO_API_KEY`, you will need to :
 1. create a `.env` file in your root folder;
 2. add the following one line to your `.env file:
     ```
-    CAMBIO_API_KEY=17b************************
+    CAMBIO_API_KEY=0cam************************
     ```
 
 ## :computer: Installation
