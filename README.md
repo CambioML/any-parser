@@ -44,5 +44,5 @@ Are you an AI engineer who need to ACCURATELY extract both the text and its layo
 ### [Extract a Table from an Image into Markdown Format](https://github.com/CambioML/any-parser/blob/main/examples/extract_table_from_image_to_markdown.ipynb)
 Are you a financial analyst who need to extract ACCURATE number from a table in an image or a PDF. Check out this notebook (3-min read)!
 
-### [Extract a Table from PDF into Excel](https://github.com/CambioML/any-parser/blob/main/demo/pdf_to_html_to_excel.ipynb)
+### [Extract a Table from PDF into Excel](https://github.com/CambioML/any-parser/blob/main/examples/pdf_to_html_to_excel.ipynb)
 Do you want to extract a complicated table from a financial report (PDF) into Excel spread sheet? Check out this notebook (3-min read)!
