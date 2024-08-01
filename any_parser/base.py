@@ -44,16 +44,6 @@ class AnyParser:
         result = self._request_file_extraction(user_id, file_id)
         return result
 
-    def parse(self, file_path, prompt="", mode="advanced"):
-        user_id, file_id = self._request_and_upload_by_apiKey(file_path)
-        result = self._request_info_extraction(user_id, file_id)
-        return result
-
-    def instruct(self, file_path, prompt="", mode="advanced"):
-        user_id, file_id = self._request_and_upload_by_apiKey(file_path)
-        result = self._request_instruction_extraction(user_id, file_id)
-        return result
-
     def _error_handler(self, response):
         if response.status_code == 403:
             raise Exception("Invalid API Key")
@@ -80,7 +70,7 @@ class AnyParser:
                     files=files,
                     timeout=30,  # Add a timeout argument to prevent the program from hanging indefinitely
                 )
-            # print(f"Upload response: {upload_response.status_code}")
+
             return user_id, file_id
 
         self._error_handler(response)
@@ -93,7 +83,6 @@ class AnyParser:
         response = requests.post(
             self._requesturl, headers=self._request_header, json=payload
         )
-        print(response.json())
 
         if response.status_code == 200:
             file_extraction_job_id = response.json().get("jobId")
@@ -105,57 +94,6 @@ class AnyParser:
 
             query_response = self.query_result(payload)
 
-            # print("Extraction success.")
-            return query_response.json()
-
-        self._error_handler(response)
-
-    def _request_info_extraction(self, user_id, file_id):
-
-        payload = {
-            "files": [{"sourceType": "s3", "fileId": file_id}],
-            "jobType": "info_extraction",
-        }
-        response = requests.post(
-            self._requesturl, headers=self._request_header, json=payload
-        )
-
-        if response.status_code == 200:
-            info_extraction_job_id = response.json().get("jobId")
-            payload = {
-                "userId": user_id,
-                "jobId": info_extraction_job_id,
-                "queryType": "job_result",
-            }
-
-            query_response = self.query_result(payload)
-
-            # print("Extraction success.")
-            return query_response.json()
-
-        self._error_handler(response)
-
-    def _request_instruction_extraction(self, user_id, file_id, prompt=""):
-        payload = {
-            "files": [{"sourceType": "s3", "fileId": file_id}],
-            "jobType": "instruction_extraction",
-            "jobParams": {"userPrompt": prompt},
-        }
-        response = requests.post(
-            self._requesturl, headers=self._request_header, json=payload
-        )
-
-        if response.status_code == 200:
-            instruction_extraction_job_id = response.json().get("jobId")
-            payload = {
-                "userId": user_id,
-                "jobId": instruction_extraction_job_id,
-                "queryType": "job_result",
-            }
-
-            query_response = self.query_result(payload)
-
-            # print("Extraction success.")
             return query_response.json()
 
         self._error_handler(response)
