@@ -23,6 +23,21 @@ conda activate any-parse
 pip3 install any-parser
 ```
 
+If you want to pdf_to_markdown.ipynb, install the following:
+- Mac:
+    ```
+    brew install poppler
+    ```
+- Linx:
+    ```
+    sudo apt update
+    sudo apt install poppler-utils
+    ```
+- Windows:
+    ```
+    choco install poppler
+    ```
+
 ## bashfile usage
 To use AnyParser via `curl` requests, you can run the following bash command from the root folder of this repository:
 ```
