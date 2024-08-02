@@ -23,12 +23,12 @@ conda activate any-parse
 pip3 install any-parser
 ```
 
-If you want to pdf_to_markdown.ipynb, install the following:
+If you want to run pdf_to_markdown.ipynb, install the following:
 - Mac:
     ```
     brew install poppler
     ```
-- Linx:
+- Linux:
     ```
     sudo apt update
     sudo apt install poppler-utils
