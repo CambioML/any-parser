@@ -1,5 +1,5 @@
-UPLOAD_URL="https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"
-EXTRACT_URL="https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract"
+UPLOAD_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/upload"
+EXTRACT_URL="https://qreije6m7l.execute-api.us-west-2.amazonaws.com/v1/cambio_api/extract"
 
 uid="null"
 jid="null"
@@ -67,5 +67,5 @@ extract() {
                     "$EXTRACT_URL")
 
     result=$(echo "$response" | jq -r '.result')
+    echo "Extraction result: $result"
 }
-
