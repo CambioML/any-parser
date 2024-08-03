@@ -17,25 +17,28 @@ class AnyParser:
             "authorizationtoken": "-",
             "apikey": apiKey,
         }
-        self.timeout = 60
 
-    def query_result(self, payload):
+    def query_result(self, payload, timeout=60):
         time.sleep(5)
-        query_timeout = datetime.now() + timedelta(seconds=self.timeout)
+        query_timeout = datetime.now() + timedelta(seconds=timeout)
 
         while datetime.now() < query_timeout:
             query_response = requests.post(
                 self._queryurl, headers=self._request_header, json=payload
             )
-            assert (
-                query_response.status_code == 200 or query_response.status_code == 202
-            )
+            # assert (
+            #     query_response.status_code == 200 or query_response.status_code == 202
+            # )
 
             if query_response.status_code == 200:
                 break
             elif query_response.status_code == 202:
                 time.sleep(5)
                 continue
+
+            self._error_handler(query_response)
+        else:
+            raise Exception("Task timeout")
 
         return query_response
 
@@ -52,6 +55,11 @@ class AnyParser:
     def instruct(self, file_path, prompt="", mode="advanced"):
         user_id, file_id = self._request_and_upload_by_apiKey(file_path)
         result = self._request_instruction_extraction(user_id, file_id)
+        return result
+
+    def schema(self, file_path, custom_schema={}):
+        user_id, file_id = self._request_and_upload_by_apiKey(file_path)
+        result = self._request_schema_extraction(user_id, file_id, custom_schema)
         return result
 
     def _error_handler(self, response):
@@ -154,6 +162,33 @@ class AnyParser:
             }
 
             query_response = self.query_result(payload)
+
+            # print("Extraction success.")
+            return query_response.json()
+
+        self._error_handler(response)
+
+    def _request_schema_extraction(self, user_id, file_id, custom_schema={}):
+        payload = {
+            "files": [{"sourceType": "s3", "fileId": file_id}],
+            "jobType": "schema_extraction",
+            "jobParams": {
+                "schemaInfo": custom_schema,
+            },
+        }
+        response = requests.post(
+            self._requesturl, headers=self._request_header, json=payload
+        )
+
+        if response.status_code == 200:
+            schema_extraction_job_id = response.json().get("jobId")
+            payload = {
+                "userId": user_id,
+                "jobId": schema_extraction_job_id,
+                "queryType": "job_result",
+            }
+
+            query_response = self.query_result(payload, timeout=300)
 
             # print("Extraction success.")
             return query_response.json()
