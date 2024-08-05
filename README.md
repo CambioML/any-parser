@@ -4,7 +4,11 @@ AnyParser provides an API to accurately extract your unstructured data (e.g. PDF
 
 ## :seedling: Set up your AnyParser API key
 
-AnyParser is still in private beta. If you are interested in testing our document models, please reach out at info@cambioml.com for a FREE testing API key.
+You can generate your keys at the [Playground Account Page](https://www.cambioml.com/account) with up to 2 keys and 100 total free pages per account.
+
+> ⚠️ **Note:** The free API is limited to 10 pages/call.
+
+If you're interested in more AnyParser usage and applications, please reach out at info@cambioml.com for details.
 
 
 To set up your API key `CAMBIO_API_KEY`, you will need to :
@@ -23,16 +27,20 @@ conda activate any-parse
 pip3 install any-parser
 ```
 
-## bashfile usage
-To use AnyParser via `curl` requests, you can run the following bash command from the root folder of this repository:
-```
-bash parse.sh <your apiKey> <file path> <prompt for parse (optional, default="")>
-```
-
-For example, to extract a table from a PDF file, you can run the following command:
-```
-bash parse.sh gl**************************************  /path/to/your/file.pdf "Return the table in a JSON format with each box's key and value."
-```
+If you want to run pdf_to_markdown.ipynb, install the following:
+- Mac:
+    ```
+    brew install poppler
+    ```
+- Linux:
+    ```
+    sudo apt update
+    sudo apt install poppler-utils
+    ```
+- Windows:
+    ```
+    choco install poppler
+    ```
 
 ## :scroll:  Examples
 
@@ -44,5 +52,3 @@ Are you an AI engineer who need to ACCURATELY extract both the text and its layo
 ### [Extract a Table from an Image into Markdown Format](https://github.com/CambioML/any-parser/blob/main/examples/extract_table_from_image_to_markdown.ipynb)
 Are you a financial analyst who need to extract ACCURATE number from a table in an image or a PDF. Check out this notebook (3-min read)!
 
-### [Extract a Table from PDF into Excel](https://github.com/CambioML/any-parser/blob/main/examples/pdf_to_html_to_excel.ipynb)
-Do you want to extract a complicated table from a financial report (PDF) into Excel spread sheet? Check out this notebook (3-min read)!
