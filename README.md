@@ -4,7 +4,11 @@ AnyParser provides an API to accurately extract your unstructured data (e.g. PDF
 
 ## :seedling: Set up your AnyParser API key
 
-You can generate your keys at the [Playground Account Page](https://www.cambioml.com/account) with up to 2 keys and 100 total free pages per account. If you're interested in more AnyParser usage and applications, please reach out at info@cambioml.com for details.
+You can generate your keys at the [Playground Account Page](https://www.cambioml.com/account) with up to 2 keys and 100 total free pages per account.
+
+> ⚠️ **Note:** The free API is limited to 10 pages/call.
+
+If you're interested in more AnyParser usage and applications, please reach out at info@cambioml.com for details.
 
 
 To set up your API key `CAMBIO_API_KEY`, you will need to :
