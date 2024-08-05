@@ -9,6 +9,7 @@ sys.path.append("../..")
 
 from any_parser import AnyParser  # noqa: E402
 
+
 if __name__ == "__main__":
     load_dotenv()
 
