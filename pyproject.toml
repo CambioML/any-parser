@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "any-parser"
-version = "0.0.12"
+version = "0.0.13"
 description = "Parser for all."
 authors = ["CambioML <wanwanaiai45@gmail.com>"]
 maintainers = ["Rachel Hu <goldpiggy@berkeley.edu>"]
