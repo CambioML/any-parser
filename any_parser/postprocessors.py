@@ -1,6 +1,7 @@
-from bs4 import BeautifulSoup
-import io
 import csv
+import io
+
+from bs4 import BeautifulSoup
 
 
 def run_convert(result, output_format):

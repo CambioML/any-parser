@@ -1,8 +1,9 @@
 import time
-import requests
 from datetime import datetime, timedelta
-from any_parser.postprocessors import run_convert
 
+import requests
+
+from any_parser.postprocessors import run_convert
 
 CAMBIO_UPLOAD_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/upload"
 CAMBIO_REQUEST_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/request"
