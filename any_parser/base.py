@@ -45,19 +45,29 @@ class AnyParser:
         result = self._request_file_extraction(user_id, file_id)
         return result
 
-    def parse(self, file_path, parse_type="table", output_format="HTML", prompt="", mode="advanced"):
+    def parse(
+        self,
+        file_path,
+        parse_type="table",
+        output_format="HTML",
+        prompt="",
+        mode="advanced",
+    ):
         parse_type = parse_type.upper()
         if parse_type not in ["TABLE"]:
-            raise ValueError("Invalid parse_type. Currently, only 'table' is supported.")
+            raise ValueError(
+                "Invalid parse_type. Currently, only 'table' is supported."
+            )
 
         output_format = output_format.upper()
         if output_format not in ["HTML", "JSON", "CSV"]:
-            raise ValueError("Invalid output_format. Expected 'HTML', 'JSON', or 'CSV'.")
+            raise ValueError(
+                "Invalid output_format. Expected 'HTML', 'JSON', or 'CSV'."
+            )
 
         user_id, file_id = self._request_and_upload_by_apiKey(file_path)
         result = self._request_info_extraction(user_id, file_id)
         return run_convert(result, output_format)
-
 
     def _error_handler(self, response):
         if response.status_code == 403:
@@ -136,4 +146,3 @@ class AnyParser:
             return query_response.json()
 
         self._error_handler(response)
-
