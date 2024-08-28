@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import requests
 
+
 CAMBIO_UPLOAD_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/upload"
 CAMBIO_REQUEST_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/request"
 CAMBIO_QUERY_URL = "https://jnrsqrod4j.execute-api.us-west-2.amazonaws.com/v1/query"
@@ -42,6 +43,26 @@ class AnyParser:
     def extract(self, file_path):
         user_id, file_id = self._request_and_upload_by_apiKey(file_path)
         result = self._request_file_extraction(user_id, file_id)
+        return result
+
+    def extract_table(
+        self,
+        file_path,
+        output_format="HTML",
+        prompt="",
+        mode="advanced",
+    ):
+        output_format = output_format.upper()
+        if output_format not in ["HTML", "JSON", "CSV"]:
+            raise ValueError(
+                "Invalid output_format. Expected 'HTML', 'JSON', or 'CSV'."
+            )
+
+        user_id, file_id = self._request_and_upload_by_apiKey(file_path)
+        job_params = {
+            "output_format": output_format,
+        }
+        result = self._request_info_extraction(user_id, file_id, job_params)
         return result
 
     def _error_handler(self, response):
@@ -89,6 +110,31 @@ class AnyParser:
             payload = {
                 "userId": user_id,
                 "jobId": file_extraction_job_id,
+                "queryType": "job_result",
+            }
+
+            query_response = self.query_result(payload)
+
+            return query_response.json()
+
+        self._error_handler(response)
+
+    def _request_info_extraction(self, user_id, file_id, job_params=None):
+
+        payload = {
+            "files": [{"sourceType": "s3", "fileId": file_id}],
+            "jobType": "info_extraction",
+            "jobParams": job_params,
+        }
+        response = requests.post(
+            self._requesturl, headers=self._request_header, json=payload
+        )
+
+        if response.status_code == 200:
+            info_extraction_job_id = response.json().get("jobId")
+            payload = {
+                "userId": user_id,
+                "jobId": info_extraction_job_id,
                 "queryType": "job_result",
             }
 
