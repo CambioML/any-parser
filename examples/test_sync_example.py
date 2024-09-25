@@ -15,7 +15,7 @@ FILE_PATH = "./sample_data/stoxx_index_guide_0003.pdf"
 # create instance of AnyParser
 ap = AnyParser(API_KEY)
 
-# synchronous extract job (extraction and result fetching together)
+# synchronous extract job (both extraction and result fetching, 60s timeout)
 md_output, total_time = ap.extract(FILE_PATH)
 print(md_output)
 print(total_time)
