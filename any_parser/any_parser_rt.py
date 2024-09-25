@@ -8,7 +8,7 @@ from typing import Dict, Optional, Tuple
 
 import requests
 
-PUBLIC_SHARED_BASE_URL = "https://api.cambio-ai.com"
+PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
 SUPPORTED_FILE_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx"]
 
