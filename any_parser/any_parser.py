@@ -12,6 +12,7 @@ PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
 SUPPORTED_FILE_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx"]
 
+
 class AnyParser:
     """AnyParser RT: Real-time parser for any data format."""
 
@@ -70,7 +71,10 @@ class AnyParser:
         # Send the POST request
         start_time = time.time()
         response = requests.post(
-            self._sync_url, headers=self._headers, data=json.dumps(payload), timeout=TIMEOUT
+            self._sync_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
         )
         end_time = time.time()
 

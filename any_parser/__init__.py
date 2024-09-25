@@ -1,4 +1,6 @@
-from any_parser.base import AnyParser
+"""AnyParser module for parsing data."""
+
+from any_parser.any_parser import AnyParser
 
 __all__ = ["AnyParser"]
 
