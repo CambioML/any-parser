@@ -19,7 +19,7 @@ class TestAnyParser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Add a random delay between 0 and 10 seconds at the start of each test suite
-        time.sleep(random.uniform(0, 10))
+        time.sleep(random.uniform(0, 20))
 
     def setUp(self):
         # get secret API key
@@ -35,8 +35,6 @@ class TestAnyParser(unittest.TestCase):
         # Add a delay before making the API call
         time.sleep(random.uniform(1, 5))
         md_output, total_time = self.ap.extract(self.file_path)
-        print("111:", md_output)
-        print("222:", total_time)
 
         # check for specific content in the markdown
         self.assertFalse(md_output.startswith("Error:"), total_time)
@@ -63,6 +61,7 @@ class TestAnyParser(unittest.TestCase):
         # Add another delay before fetching
         time.sleep(random.uniform(1, 5))
         md = self.ap.async_fetch(file_id=file_id)
+        self.assertFalse(md.startswith("Error:"), md)
         self.assertTrue(
             md.startswith("STOXX INDEX METHODOLOGY GUIDE"),
             "Expected content not found at the start of the fetched result",
