@@ -43,17 +43,8 @@ jobs:
     - name: Sort imports with isort
       run: |
         isort . --profile=black --check-only --verbose
-    - name: Show secret
-      run: |
-        echo "API_KEY: $API_KEY"
-      env:
-        API_KEY: ${{ env.API_KEY }}
-    
-    - name: Show secret 2
-      run: echo "my api key is ${{ secrets.API_KEY }}"
-        
     - name: Test with unittest
       env:
         API_KEY: ${{ secrets.API_KEY }}
       run: |
-        poetry run python -m unittest discover
+        poetry run python -m unittest discover tests
