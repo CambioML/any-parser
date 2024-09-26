@@ -46,3 +46,5 @@ jobs:
     - name: Test with unittest
       run: |
         poetry run python -m unittest discover
+      env:
+        API_KEY: ${{ secrets.API_KEY }}
