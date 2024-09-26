@@ -19,6 +19,7 @@ class TestAnyParser(unittest.TestCase):
         self.api_key = os.environ.get("API_KEY")
         if not self.api_key:
             raise ValueError("API_KEY environment variable is not set")
+        print("we got api key: ", self.api_key)
         self.file_path = "../examples/sample_data/stoxx_index_guide_0003.pdf"
         # create instance of AnyParser
         self.ap = AnyParser(self.api_key)
