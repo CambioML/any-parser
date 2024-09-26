@@ -26,6 +26,8 @@ class TestAnyParser(unittest.TestCase):
     def test_sync_extract(self):
         """Synchronous Extraction"""
         md_output, total_time = self.ap.extract(self.file_path)
+        print("111:", md_output)
+        print("222:", total_time)
 
         # check for specific content in the markdown
         self.assertFalse(md_output.startswith("Error:"), md_output)
