@@ -161,12 +161,12 @@ class AnyParser:
                         timeout=TIMEOUT,
                     )
                     if upload_resp.status_code != 204:
-                        return f"Upload error: {upload_resp}"
+                        return f"Error: {upload_resp.status_code} {upload_resp.text}"
                 return file_id
             except json.JSONDecodeError:
                 return "Error: Invalid JSON response"
         else:
-            return f"Request error: {response}"
+            return f"Error: {response.status_code} {response.text}"
 
     def async_fetch(
         self,
@@ -214,9 +214,9 @@ class AnyParser:
 
         if response is None:
             return "Error: timeout, no response received"
-        elif response.status_code == 200:
+        if response.status_code == 200:
             markdown_list = response.json()["markdown"]
             return "\n".join(markdown_list)
-        elif response.status_code == 202:
+        if response.status_code == 202:
             return None
-        return f"Error: {response.status_code}"
+        return f"Error: {response.status_code} {response.text}"
