@@ -10,7 +10,17 @@ import requests
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
-SUPPORTED_FILE_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx"]
+SUPPORTED_FILE_EXTENSIONS = [
+    "pdf",
+    "doc",
+    "docx",
+    "ppt",
+    "pptx",
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+]
 
 
 class AnyParser:
@@ -50,14 +60,18 @@ class AnyParser:
 
         # Check if the file exists
         if not Path(file_path).is_file():
-            return "Error: File does not exist", "File does not exist"
+            return f"Error: File does not exist: {file_path}", None
 
-        if file_extension in SUPPORTED_FILE_EXTENSIONS:
-            # Encode the PDF file content in base64
-            with open(file_path, "rb") as file:
-                encoded_file = base64.b64encode(file.read()).decode("utf-8")
-        else:
-            return "Error: Unsupported file type", "Unsupported file type"
+        # Check for valid file extension
+        if file_extension not in SUPPORTED_FILE_EXTENSIONS:
+            return (
+                f"Error: Unsupported file type: {file_extension}. Supported file types include {', '.join(SUPPORTED_FILE_EXTENSIONS)}",
+                None,
+            )
+
+        # Encode the file content in base64
+        with open(file_path, "rb") as file:
+            encoded_file = base64.b64encode(file.read()).decode("utf-8")
 
         # Create the JSON payload
         payload = {
@@ -91,9 +105,9 @@ class AnyParser:
                     f"Time Elapsed: {end_time - start_time:.2f} seconds",
                 )
             except json.JSONDecodeError:
-                return "Error: Invalid JSON response", f"Response: {response.text}"
+                return f"Error: Invalid JSON response: {response.text}", None
         else:
-            return f"Error: {response.status_code}", f"Response: {response.text}"
+            return f"Error: {response.status_code} {response.text}", None
 
     def async_extract(self, file_path: str, extract_args: Optional[Dict] = None) -> str:
         """Extract data asyncronously.
@@ -110,8 +124,12 @@ class AnyParser:
         if not Path(file_path).is_file():
             return "Error: File does not exist", "File does not exist"
 
+        # Check for valid file extension
         if file_extension not in SUPPORTED_FILE_EXTENSIONS:
-            return "Error: Unsupported file type", "Unsupported file type"
+            return (
+                f"Error: Unsupported file type: {file_extension}. Supported file types include {', '.join(SUPPORTED_FILE_EXTENSIONS)}",
+                None,
+            )
 
         file_name = Path(file_path).name
         # Create the JSON payload
@@ -158,6 +176,18 @@ class AnyParser:
         sync_timeout: int = 60,
         sync_interval: int = 5,
     ) -> str:
+        """Fetches extraction results asynchronously.
+
+        Args:
+            file_id (str): The ID of the file to fetch results for.
+            sync (bool, optional): Whether to wait for the results synchronously.
+            sync_timeout (int, optional): Maximum time to wait for results in seconds. Defaults to 60.
+            sync_interval (int, optional): Time interval between polling attempts in seconds. Defaults to 5.
+
+        Returns:
+            str: The extracted results as a markdown string.
+            None: If the extraction is still in progress (when sync is False).
+        """
         response = None
         # Create the JSON payload
         payload = {"file_id": file_id}
