@@ -36,10 +36,10 @@ class TestAnyParser(unittest.TestCase):
         self.api_key = os.environ.get("API_KEY")
         self.ap = AnyParser(self.api_key)
 
-    def test_sync_extract(self):
+    def test_pdf_sync_extract(self):
         """Synchronous Extraction"""
         working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
-        correct_output_file = "./tests/correct_output.txt"
+        correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         markdown, elapsed_time = self.ap.extract(working_file)
         correct_output = get_ground_truth(correct_output_file)
@@ -50,10 +50,42 @@ class TestAnyParser(unittest.TestCase):
         )
         self.assertIn("Time Elapsed", elapsed_time)
 
-    def test_async_extract_and_fetch(self):
+    def test_pdf_async_extract_and_fetch(self):
         """Asynchronous Extraction and Fetch"""
         working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
-        correct_output_file = "./tests/correct_output.txt"
+        correct_output_file = "./tests/outputs/correct_pdf_output.txt"
+
+        file_id = self.ap.async_extract(working_file)
+        self.assertNotIn(
+            "error", file_id.lower(), "Error occurred during async extraction"
+        )
+
+        markdown = self.ap.async_fetch(file_id=file_id)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+
+    def test_docx_sync_extract(self):
+        """Synchronous Extraction"""
+        working_file = "./examples/sample_data/test_odf.docx"
+        correct_output_file = "./tests/outputs/correct_docx_output.txt"
+
+        markdown, elapsed_time = self.ap.extract(working_file)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+        self.assertIn("Time Elapsed", elapsed_time)
+
+    def test_docx_async_extract_and_fetch(self):
+        """Asynchronous Extraction and Fetch"""
+        working_file = "./examples/sample_data/test_odf.docx"
+        correct_output_file = "./tests/outputs/correct_docx_output.txt"
 
         file_id = self.ap.async_extract(working_file)
         self.assertNotIn(
