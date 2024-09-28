@@ -39,7 +39,7 @@ class TestAnyParser(unittest.TestCase):
         self.ap = AnyParser(self.api_key)
 
     def test_pdf_sync_extract(self):
-        """Synchronous Extraction"""
+        """Synchronous PDF Extraction"""
         working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
@@ -55,7 +55,7 @@ class TestAnyParser(unittest.TestCase):
         self.assertIn("Time Elapsed", elapsed_time)
 
     def test_pdf_async_extract_and_fetch(self):
-        """Asynchronous Extraction and Fetch"""
+        """Asynchronous PDF Extraction and Fetch"""
         working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
@@ -73,7 +73,7 @@ class TestAnyParser(unittest.TestCase):
         )
 
     def test_docx_sync_extract(self):
-        """Synchronous Extraction"""
+        """Synchronous Word Extraction"""
         working_file = "./examples/sample_data/test_odf.docx"
         correct_output_file = "./tests/outputs/correct_docx_output.txt"
 
@@ -89,9 +89,77 @@ class TestAnyParser(unittest.TestCase):
         self.assertIn("Time Elapsed", elapsed_time)
 
     def test_docx_async_extract_and_fetch(self):
-        """Asynchronous Extraction and Fetch"""
+        """Asynchronous Word Extraction and Fetch"""
         working_file = "./examples/sample_data/test_odf.docx"
         correct_output_file = "./tests/outputs/correct_docx_output.txt"
+
+        # extract
+        file_id = self.ap.async_extract(working_file)
+        self.assertFalse(file_id.startswith("Error:"), file_id)
+        # fetch
+        markdown = self.ap.async_fetch(file_id=file_id)
+        self.assertFalse(markdown.startswith("Error:"), markdown)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+
+    def test_pptx_sync_extract(self):
+        """Synchronous Powerpoint Extraction"""
+        working_file = "./examples/sample_data/test_odf.pptx"
+        correct_output_file = "./tests/outputs/correct_pptx_output.txt"
+
+        # extract
+        markdown, elapsed_time = self.ap.extract(working_file)
+        self.assertFalse(markdown.startswith("Error:"), markdown)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+        self.assertIn("Time Elapsed", elapsed_time)
+
+    def test_pptx_async_extract_and_fetch(self):
+        """Asynchronous Powerpoint Extraction and Fetch"""
+        working_file = "./examples/sample_data/test_odf.pptx"
+        correct_output_file = "./tests/outputs/correct_pptx_output.txt"
+
+        # extract
+        file_id = self.ap.async_extract(working_file)
+        self.assertFalse(file_id.startswith("Error:"), file_id)
+        # fetch
+        markdown = self.ap.async_fetch(file_id=file_id)
+        self.assertFalse(markdown.startswith("Error:"), markdown)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+
+    def test_image_sync_extract(self):
+        """Synchronous Image Extraction"""
+        working_file = "./examples/sample_data/test3.png"
+        correct_output_file = "./tests/outputs/correct_png_output.txt"
+
+        # extract
+        markdown, elapsed_time = self.ap.extract(working_file)
+        self.assertFalse(markdown.startswith("Error:"), markdown)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+        self.assertIn("Time Elapsed", elapsed_time)
+
+    def test_image_async_extract_and_fetch(self):
+        """Asynchronous Image Extraction and Fetch"""
+        working_file = "./examples/sample_data/test3.png"
+        correct_output_file = "./tests/outputs/correct_png_output.txt"
 
         # extract
         file_id = self.ap.async_extract(working_file)

@@ -66,7 +66,7 @@ class AnyParser:
         if file_extension not in SUPPORTED_FILE_EXTENSIONS:
             supported_types = ", ".join(SUPPORTED_FILE_EXTENSIONS)
             return (
-                f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}",
+                f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}.",
                 None,
             )
 
@@ -128,7 +128,7 @@ class AnyParser:
         # Check for valid file extension
         if file_extension not in SUPPORTED_FILE_EXTENSIONS:
             supported_types = ", ".join(SUPPORTED_FILE_EXTENSIONS)
-            return f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}"
+            return f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}."
 
         file_name = Path(file_path).name
         # Create the JSON payload
