@@ -3,6 +3,7 @@
 import base64
 import json
 import time
+from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
@@ -23,6 +24,19 @@ SUPPORTED_FILE_EXTENSIONS = [
 ]
 
 
+class ModelType(Enum):
+    BASE = "base"
+    PRO = "pro"
+    ULTRA = "ultra"
+
+
+class ProcessType(Enum):
+    FILE = "file"
+    TABLE = "table"
+    FILE_REFINED = "file_refined"
+    FILE_REFINED_QUICK = "file_refined_quick"
+
+
 class AnyParser:
     """AnyParser RT: Real-time parser for any data format."""
 
@@ -37,6 +51,7 @@ class AnyParser:
             None
         """
         self._sync_url = f"{base_url}/extract"
+        self._sync_refined_url = f"{base_url}/refined_extract"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
         self._api_key = api_key
@@ -46,7 +61,10 @@ class AnyParser:
         }
 
     def extract(
-        self, file_path: str, extract_args: Optional[Dict] = None
+        self,
+        file_path: str,
+        model: ModelType = ModelType.BASE,
+        extract_args: Optional[Dict] = None,
     ) -> Tuple[str, str]:
         """Extract data in real-time.
 
@@ -83,10 +101,17 @@ class AnyParser:
         if extract_args is not None and isinstance(extract_args, dict):
             payload["extract_args"] = extract_args
 
+        if model == ModelType.BASE:
+            url = self._sync_url
+        else:
+            url = self._sync_refined_url
+            if model == ModelType.PRO:
+                payload["quick_mode"] = True
+
         # Send the POST request
         start_time = time.time()
         response = requests.post(
-            self._sync_url,
+            url,
             headers=self._headers,
             data=json.dumps(payload),
             timeout=TIMEOUT,
@@ -110,8 +135,13 @@ class AnyParser:
         else:
             return f"Error: {response.status_code} {response.text}", None
 
-    def async_extract(self, file_path: str, extract_args: Optional[Dict] = None) -> str:
-        """Extract data asyncronously.
+    def async_extract(
+        self,
+        file_path: str,
+        model: ModelType = ModelType.BASE,
+        extract_args: Optional[Dict] = None,
+    ) -> str:
+        """Extract data asynchronously.
 
         Args:
             file_path (str): The path to the file to be parsed.
@@ -131,9 +161,18 @@ class AnyParser:
             return f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}."
 
         file_name = Path(file_path).name
+
+        if model == ModelType.BASE:
+            process_type = ProcessType.FILE
+        elif model == ModelType.PRO:
+            process_type = ProcessType.FILE_REFINED_QUICK
+        elif model == ModelType.ULTRA:
+            process_type = ProcessType.FILE_REFINED
+
         # Create the JSON payload
         payload = {
             "file_name": file_name,
+            "process_type": process_type.value,
         }
 
         if extract_args is not None and isinstance(extract_args, dict):
