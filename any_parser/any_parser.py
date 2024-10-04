@@ -88,6 +88,8 @@ class AnyParser:
                 None,
             )
 
+        self._check_model(model)
+
         # Encode the file content in base64
         with open(file_path, "rb") as file:
             encoded_file = base64.b64encode(file.read()).decode("utf-8")
@@ -103,7 +105,7 @@ class AnyParser:
 
         if model == ModelType.BASE:
             url = self._sync_url
-        else:
+        elif model == ModelType.PRO or model == ModelType.ULTRA:
             url = self._sync_refined_url
             if model == ModelType.PRO:
                 payload["quick_mode"] = True
@@ -159,6 +161,8 @@ class AnyParser:
         if file_extension not in SUPPORTED_FILE_EXTENSIONS:
             supported_types = ", ".join(SUPPORTED_FILE_EXTENSIONS)
             return f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}."
+
+        self._check_model(model)
 
         file_name = Path(file_path).name
 
@@ -259,3 +263,10 @@ class AnyParser:
         if response.status_code == 202:
             return None
         return f"Error: {response.status_code} {response.text}"
+
+    def _check_model(self, model: ModelType) -> None:
+        if model not in {ModelType.BASE, ModelType.PRO, ModelType.ULTRA}:
+            valid_models = ", ".join(["`" + model.value + "`" for model in ModelType])
+            raise ValueError(
+                f"Invalid model type: {model}. Supported `model` types include {valid_models}."
+            )
