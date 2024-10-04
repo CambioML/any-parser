@@ -5,4 +5,4 @@ from any_parser.any_parser import AnyParser
 
 __all__ = ["AnyParser", "ModelType"]  # Add ModelType to __all__
 
-__version__ = "0.0.15"
+__version__ = "0.0.16"
