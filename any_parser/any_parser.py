@@ -43,7 +43,7 @@ class AnyParser:
         self._headers = {
             "Content-Type": "application/json",
             "x-api-key": self._api_key,
-            "Authorization": "-"
+            "Authorization": "-",
         }
 
     def extract(
