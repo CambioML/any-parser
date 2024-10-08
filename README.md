@@ -32,11 +32,11 @@ conda activate any-parse
 pip3 install any-parser
 ```
 ### 2. Create an AnyParser Instance Using Your API Key
-Use your API key to create an instance of AnyParserRT. Make sure you’ve set up your .env file to store your API key securely:
+Use your API key to create an instance of AnyParser. Make sure you’ve set up your .env file to store your API key securely:
 ```python
 import os
 from dotenv import load_dotenv
-from any_parser import AnyParserRT  # Import the AnyParserRT class
+from any_parser import AnyParser 
 
 # Load environment variables
 load_dotenv(override=True)
@@ -45,7 +45,7 @@ load_dotenv(override=True)
 example_apikey = os.getenv("CAMBIO_API_KEY")
 
 # Create an AnyParser instance
-ap = AnyParserRT(api_key=example_apikey)
+ap = AnyParser(api_key=example_apikey)
 ```
 
 ### 3. Run Synchronous Extraction
