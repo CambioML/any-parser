@@ -1,8 +1,7 @@
 """AnyParser module for parsing data."""
 
-from any_parser.any_parser import ModelType  # Import ModelType here
-from any_parser.any_parser import AnyParser
+from any_parser.any_parser import AnyParser, ModelType
 
-__all__ = ["AnyParser", "ModelType"]  # Add ModelType to __all__
+__all__ = ["AnyParser", "ModelType"]
 
 __version__ = "0.0.16"
