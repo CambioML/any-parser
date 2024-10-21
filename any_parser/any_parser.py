@@ -343,7 +343,6 @@ class AnyParser:
             if result_type == "json":
                 return response.json()["json"]
             else:
-                print(response.json())
                 markdown_list = response.json()["markdown"]
                 return "\n".join(markdown_list)
         if response.status_code == 202:

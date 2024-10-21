@@ -1,2 +1,2 @@
 #!/bin/sh
-python -m unittest discover tests
+python -m unittest discover tests -v
