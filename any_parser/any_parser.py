@@ -28,7 +28,6 @@ RESULT_TYPES = ["markdown", "json"]
 class ModelType(Enum):
     BASE = "base"
     PRO = "pro"
-    ULTRA = "ultra"
 
 
 class ProcessType(Enum):
@@ -53,7 +52,7 @@ class AnyParser:
         """
         self._sync_extract_url = f"{base_url}/extract"
         self._sync_json_url = f"{base_url}/json/extract"
-        self._sync_refined_url = f"{base_url}/refined_extract"
+        self._sync_refined_url = f"{base_url}/refined_parse"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
         self._api_key = api_key
@@ -103,7 +102,7 @@ class AnyParser:
 
         if model == ModelType.BASE:
             url = self._sync_extract_url
-        elif model == ModelType.PRO or model == ModelType.ULTRA:
+        elif model == ModelType.PRO:
             url = self._sync_refined_url
             if model == ModelType.PRO:
                 payload["quick_mode"] = True
@@ -225,8 +224,6 @@ class AnyParser:
             process_type = ProcessType.FILE
         elif model == ModelType.PRO:
             process_type = ProcessType.FILE_REFINED_QUICK
-        elif model == ModelType.ULTRA:
-            process_type = ProcessType.FILE_REFINED
         else:
             return "Error: Invalid model type", None
 
@@ -377,7 +374,7 @@ class AnyParser:
             return f"Error: {response.status_code} {response.text}"
 
     def _check_model(self, model: ModelType) -> None:
-        if model not in {ModelType.BASE, ModelType.PRO, ModelType.ULTRA}:
+        if model not in {ModelType.BASE, ModelType.PRO}:
             valid_models = ", ".join(["`" + model.value + "`" for model in ModelType])
             return f"Invalid model type: {model}. Supported `model` types include {valid_models}."
 
