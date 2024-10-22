@@ -8,7 +8,7 @@ import unittest
 import Levenshtein
 from dotenv import load_dotenv
 
-from tests.test_data import EXTRACT_JSON_TEST_DATA
+from tests.test_data import EXTRACT_JSON_TEST_DATA, EXTRACT_RESUME_TEST_DATA
 
 sys.path.append(".")
 load_dotenv(override=True)
@@ -207,6 +207,32 @@ class TestAnyParser(unittest.TestCase):
                 self.assertEqual(key_value_result, data["correct_output"])
                 # wait 1 s between requests
                 time.sleep(1)
+
+    def test_sync_extract_resume(self):
+        """Synchronous Resume Extraction with subtests for different file formats"""
+        for data in EXTRACT_RESUME_TEST_DATA:
+            for extract_type in data["correct_output"]:
+                with self.subTest(
+                    working_file=data["working_file"], extract_type=extract_type
+                ):
+                    # extract
+                    key_value_result, elapsed_time = self.ap.extract_resume(
+                        data["working_file"], extract_type=extract_type
+                    )
+                    print("\n\n Key Value Result: ")
+                    print(key_value_result)
+                    print("\n\n Correct Output: ")
+                    print(data["correct_output"][extract_type])
+
+                    # get levenshtein distance from string of correct output vs. key value result
+                    percentage = compare_markdown(
+                        str(key_value_result), str(data["correct_output"][extract_type])
+                    )
+                    self.assertGreaterEqual(
+                        percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+                    )
+
+                    self.assertIn("Time Elapsed", elapsed_time)
 
 
 if __name__ == "__main__":
