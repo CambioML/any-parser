@@ -177,12 +177,12 @@ class TestAnyParser(unittest.TestCase):
             percentage, 90, f"Output similarity too low: {percentage:.2f}%"
         )
 
-    def test_sync_extract_json(self):
+    def test_sync_extract_key_value(self):
         """Synchronous JSON Extraction with subtests for different file formats"""
         for data in EXTRACT_JSON_TEST_DATA:
             with self.subTest(working_file=data["working_file"]):
                 # extract
-                key_value_result, elapsed_time = self.ap.extract_json(
+                key_value_result, elapsed_time = self.ap.extract_key_value(
                     data["working_file"], data["extract_instruction"]
                 )
 
@@ -190,19 +190,17 @@ class TestAnyParser(unittest.TestCase):
                 self.assertEqual(key_value_result, data["correct_output"])
                 self.assertIn("Time Elapsed", elapsed_time)
 
-    def test_async_extract_json_and_fetch(self):
+    def test_async_extract_key_value_and_fetch(self):
         """Asynchronous JSON Extraction with subtests for different file formats"""
         for data in EXTRACT_JSON_TEST_DATA:
             with self.subTest(working_file=data["working_file"]):
                 # extract
-                file_id = self.ap.async_extract_json(
+                file_id = self.ap.async_extract_key_value(
                     data["working_file"], data["extract_instruction"]
                 )
                 self.assertFalse(file_id.startswith("Error:"), file_id)
                 # fetch
-                key_value_result = self.ap.async_fetch(
-                    file_id=file_id, result_type="json"
-                )
+                key_value_result = self.ap.async_fetch(file_id=file_id)
                 # assertions
                 self.assertEqual(key_value_result, data["correct_output"])
                 # wait 1 s between requests
