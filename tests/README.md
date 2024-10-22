@@ -8,9 +8,13 @@ These tests are written using the unittest framework in Python. The tests are lo
 ```bash
 pip install Levenshtein
 ```
+2. Add a `.env` file in the `tests` folder with the following content:
+```bash
+API_KEY=*************
+```
 
 ## Running Tests
-1. Make sure you are in the root folder.
+1. Make sure you are in the project root folder.
 2. Run the following command:
 ```bash
 ./run_tests.sh
