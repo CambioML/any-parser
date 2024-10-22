@@ -9,7 +9,7 @@
 
 ## :seedling: Set up your AnyParser API key
 
-To get started, generate your API key from the [Playground Account Page](https://www.cambioml.com/account). Each account comes with **100 free pages**.
+To get started, generate your API key from the [Sandbox Account Page](https://www.cambioml.com/account). Each account comes with **100 free pages**.
 
 > ⚠️ **Note:** The free API is limited to 10 pages/call.
 
@@ -25,18 +25,18 @@ CAMBIO_API_KEY=0cam************************
 
 ## :computer: Installation
 ### 1. Set Up a New Conda Environment and Install AnyParser
-First, create and activate a new Conda environment, then install AnyParser: 
+First, create and activate a new Conda environment, then install AnyParser:
 ```bash
 conda create -n any-parse python=3.10 -y
 conda activate any-parse
 pip3 install any-parser
 ```
 ### 2. Create an AnyParser Instance Using Your API Key
-Use your API key to create an instance of AnyParserRT. Make sure you’ve set up your .env file to store your API key securely:
+Use your API key to create an instance of AnyParser. Make sure you’ve set up your .env file to store your API key securely:
 ```python
 import os
 from dotenv import load_dotenv
-from any_parser import AnyParserRT  # Import the AnyParserRT class
+from any_parser import AnyParser
 
 # Load environment variables
 load_dotenv(override=True)
@@ -45,7 +45,7 @@ load_dotenv(override=True)
 example_apikey = os.getenv("CAMBIO_API_KEY")
 
 # Create an AnyParser instance
-ap = AnyParserRT(api_key=example_apikey)
+ap = AnyParser(api_key=example_apikey)
 ```
 
 ### 3. Run Synchronous Extraction
@@ -73,4 +73,3 @@ Are you an AI engineer looking to **accurately** extract both the text and layou
 
 ### [Extract a Table from an Image into Markdown Format](https://github.com/CambioML/any-parser/blob/rt-migration/examples/image_to_markdown.ipynb)
 Are you a financial analyst needing to **accurately** extract numbers from a table within an image? Explore this [3-minute notebook example](https://github.com/CambioML/any-parser/blob/rt-migration/examples/image_to_markdown.ipynb).
-
