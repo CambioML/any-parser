@@ -9,25 +9,15 @@ from typing import Dict, Optional, Tuple
 
 import requests
 
+from any_parser.utils import (
+    ModelType,
+    check_file_type_and_path,
+    check_model,
+    upload_file_to_presigned_url,
+)
+
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
-SUPPORTED_FILE_EXTENSIONS = [
-    "pdf",
-    "doc",
-    "docx",
-    "ppt",
-    "pptx",
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-]
-
-
-class ModelType(Enum):
-    BASE = "base"
-    PRO = "pro"
-    ULTRA = "ultra"
 
 
 class ProcessType(Enum):
@@ -50,8 +40,9 @@ class AnyParser:
         Returns:
             None
         """
-        self._sync_url = f"{base_url}/extract"
-        self._sync_refined_url = f"{base_url}/refined_extract"
+        self._sync_extract_url = f"{base_url}/extract"
+        self._sync_json_url = f"{base_url}/json/extract"
+        self._sync_refined_url = f"{base_url}/refined_parse"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
         self._api_key = api_key
@@ -66,29 +57,30 @@ class AnyParser:
         model: ModelType = ModelType.BASE,
         extract_args: Optional[Dict] = None,
     ) -> Tuple[str, str]:
-        """Extract data in real-time.
+        """Extract full content from a file in real-time.
 
         Args:
             file_path (str): The path to the file to be parsed.
-            extract_args (Optional[Dict]): Additional extraction arguments added to prompt
+            model (ModelType): The model to use for extraction. Can be
+                `ModelType.BASE` or `ModelType.PRO`. Defaults to `ModelType.BASE`.
+            extract_args (Optional[Dict]): Additional extraction arguments added
+                to the prompt.
+
         Returns:
             tuple(str, str): The extracted data and the time taken.
         """
+
         file_extension = Path(file_path).suffix.lower().lstrip(".")
 
-        # Check if the file exists
-        if not Path(file_path).is_file():
-            return f"Error: File does not exist: {file_path}", None
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
 
-        # Check for valid file extension
-        if file_extension not in SUPPORTED_FILE_EXTENSIONS:
-            supported_types = ", ".join(SUPPORTED_FILE_EXTENSIONS)
-            return (
-                f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}.",
-                None,
-            )
+        if error:
+            return error, None
 
-        self._check_model(model)
+        error = check_model(model)
+        if error:
+            return error, None
 
         # Encode the file content in base64
         with open(file_path, "rb") as file:
@@ -104,11 +96,13 @@ class AnyParser:
             payload["extract_args"] = extract_args
 
         if model == ModelType.BASE:
-            url = self._sync_url
-        elif model == ModelType.PRO or model == ModelType.ULTRA:
+            url = self._sync_extract_url
+        elif model == ModelType.PRO:
             url = self._sync_refined_url
             if model == ModelType.PRO:
                 payload["quick_mode"] = True
+        else:
+            return "Error: Invalid model type", None
 
         # Send the POST request
         start_time = time.time()
@@ -137,32 +131,89 @@ class AnyParser:
         else:
             return f"Error: {response.status_code} {response.text}", None
 
+    def extract_key_value(
+        self,
+        file_path: str,
+        extract_instruction: Dict,
+    ) -> Tuple[str, str]:
+        """Extract key-value pairs from a file in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+            extract_instruction (Dict): A dictionary containing the keys to be
+                extracted, with their values as the description of those keys.
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+        """
+        file_extension = Path(file_path).suffix.lower().lstrip(".")
+
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
+        if error:
+            return error, None
+
+        # Encode the file content in base64
+        with open(file_path, "rb") as file:
+            encoded_file = base64.b64encode(file.read()).decode("utf-8")
+
+        # Create the JSON payload
+        payload = {
+            "file_content": encoded_file,
+            "file_type": file_extension,
+            "instruction_args": {"extract_instruction": extract_instruction},
+        }
+
+        # Send the POST request
+        start_time = time.time()
+        response = requests.post(
+            self._sync_json_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
+        )
+        end_time = time.time()
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            try:
+                response_data = response.json()
+                result = response_data["json"]
+                return (
+                    result,
+                    f"Time Elapsed: {end_time - start_time:.2f} seconds",
+                )
+            except json.JSONDecodeError:
+                return f"Error: Invalid JSON response: {response.text}", None
+        else:
+            return f"Error: {response.status_code} {response.text}", None
+
     def async_extract(
         self,
         file_path: str,
         model: ModelType = ModelType.BASE,
         extract_args: Optional[Dict] = None,
     ) -> str:
-        """Extract data asynchronously.
+        """Extract full content from a file asynchronously.
 
         Args:
             file_path (str): The path to the file to be parsed.
+            model (ModelType): The model to use for extraction. Can be
+                `ModelType.BASE` or `ModelType.PRO`. Defaults to `ModelType.BASE`.
             extract_args (Optional[Dict]): Additional extraction arguments added to prompt
         Returns:
             str: The file id of the uploaded file.
         """
         file_extension = Path(file_path).suffix.lower().lstrip(".")
 
-        # Check if the file exists
-        if not Path(file_path).is_file():
-            return f"Error: File does not exist: {file_path}"
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
 
-        # Check for valid file extension
-        if file_extension not in SUPPORTED_FILE_EXTENSIONS:
-            supported_types = ", ".join(SUPPORTED_FILE_EXTENSIONS)
-            return f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}."
+        if error:
+            return error, None
 
-        self._check_model(model)
+        error = check_model(model)
+        if error:
+            return error, None
 
         file_name = Path(file_path).name
 
@@ -170,8 +221,8 @@ class AnyParser:
             process_type = ProcessType.FILE
         elif model == ModelType.PRO:
             process_type = ProcessType.FILE_REFINED_QUICK
-        elif model == ModelType.ULTRA:
-            process_type = ProcessType.FILE_REFINED
+        else:
+            return "Error: Invalid model type", None
 
         # Create the JSON payload
         payload = {
@@ -190,26 +241,50 @@ class AnyParser:
             timeout=TIMEOUT,
         )
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            try:
-                file_id = response.json().get("fileId")
-                presigned_url = response.json().get("presignedUrl")
-                with open(file_path, "rb") as file_to_upload:
-                    files = {"file": (file_path, file_to_upload)}
-                    upload_resp = requests.post(
-                        presigned_url["url"],
-                        data=presigned_url["fields"],
-                        files=files,
-                        timeout=TIMEOUT,
-                    )
-                    if upload_resp.status_code != 204:
-                        return f"Error: {upload_resp.status_code} {upload_resp.text}"
-                return file_id
-            except json.JSONDecodeError:
-                return "Error: Invalid JSON response"
-        else:
-            return f"Error: {response.status_code} {response.text}"
+        # If response successful, upload the file
+        return upload_file_to_presigned_url(file_path, response)
+
+    def async_extract_key_value(
+        self,
+        file_path: str,
+        extract_instruction: Dict,
+    ) -> str:
+        """Extract key-value pairs from a file asynchronously.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+            extract_instruction (Dict): A dictionary containing the keys to be
+                extracted, with their values as the description of those keys.
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        file_extension = Path(file_path).suffix.lower().lstrip(".")
+
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
+
+        if error:
+            return error, None
+
+        file_name = Path(file_path).name
+
+        # Create the JSON payload
+        payload = {
+            "file_name": file_name,
+            "process_type": "json",
+            "extract_args": {"extract_instruction": extract_instruction},
+        }
+
+        # Send the POST request
+        response = requests.post(
+            self._async_upload_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
+        )
+
+        # If response successful, upload the file
+        return upload_file_to_presigned_url(file_path, response)
 
     def async_fetch(
         self,
@@ -230,6 +305,7 @@ class AnyParser:
             str: The extracted results as a markdown string.
             None: If the extraction is still in progress (when sync is False).
         """
+
         response = None
         # Create the JSON payload
         payload = {"file_id": file_id}
@@ -258,15 +334,13 @@ class AnyParser:
         if response is None:
             return "Error: timeout, no response received"
         if response.status_code == 200:
-            markdown_list = response.json()["markdown"]
-            return "\n".join(markdown_list)
+            result = response.json()
+            if "json" in result:
+                return result["json"]
+            elif "markdown" in result:
+                markdown_list = result["markdown"]
+                return "\n".join(markdown_list)
+            return f"Error: Invalid response format\n {result}"
         if response.status_code == 202:
             return None
         return f"Error: {response.status_code} {response.text}"
-
-    def _check_model(self, model: ModelType) -> None:
-        if model not in {ModelType.BASE, ModelType.PRO, ModelType.ULTRA}:
-            valid_models = ", ".join(["`" + model.value + "`" for model in ModelType])
-            raise ValueError(
-                f"Invalid model type: {model}. Supported `model` types include {valid_models}."
-            )
