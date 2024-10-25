@@ -60,7 +60,7 @@ class AnyParser:
         """
         self._sync_extract_url = f"{base_url}/extract"
         self._sync_json_url = f"{base_url}/json/extract"
-        self._sync_resume_url = f"{base_url}/extract/resume"
+        self._sync_resume_url = f"{base_url}/resume/extract"
         self._sync_refined_url = f"{base_url}/refined_parse"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
@@ -201,7 +201,7 @@ class AnyParser:
         else:
             return f"Error: {response.status_code} {response.text}", None
 
-    def extract_resume(
+    def resume_extract(
         self,
         file_path: str,
         extract_type: Dict,
@@ -324,48 +324,6 @@ class AnyParser:
         return self._upload_file_to_presigned_url(file_path, response)
 
     def async_extract_json(
-        self,
-        file_path: str,
-        extract_instruction: Dict,
-    ) -> str:
-        """Extract data asynchronously.
-
-        Args:
-            file_path (str): The path to the file to be parsed.
-            extract_instruction (Dict): A dictionary containing the keys to be extracted,
-                with their values as the description of those keys.
-        Returns:
-            str: The file id of the uploaded file.
-        """
-        file_extension = Path(file_path).suffix.lower().lstrip(".")
-
-        # Check if the file exists and file_type
-        error = self._check_file_type_and_path(file_path, file_extension)
-
-        if error:
-            return error, None
-
-        file_name = Path(file_path).name
-
-        # Create the JSON payload
-        payload = {
-            "file_name": file_name,
-            "process_type": "json",
-            "extract_args": {"extract_instruction": extract_instruction},
-        }
-
-        # Send the POST request
-        response = requests.post(
-            self._async_upload_url,
-            headers=self._headers,
-            data=json.dumps(payload),
-            timeout=TIMEOUT,
-        )
-
-        # If response successful, upload the file
-        return self._upload_file_to_presigned_url(file_path, response)
-
-    def async_extract_resume(
         self,
         file_path: str,
         extract_instruction: Dict,
