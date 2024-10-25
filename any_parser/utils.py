@@ -22,6 +22,16 @@ SUPPORTED_FILE_EXTENSIONS = [
     "gif",
 ]
 
+SUPPORTED_RESUME_EXTRACT_TYPES = [
+    "pii",
+    "education",
+    "work_experience",
+    "personal_info",
+    "skills",
+    "certifications",
+    "projects",
+]
+
 
 def upload_file_to_presigned_url(
     file_path: str, response: requests.Response, timeout: int = 10
@@ -61,3 +71,10 @@ def check_file_type_and_path(file_path, file_extension):
     if file_extension not in SUPPORTED_FILE_EXTENSIONS:
         supported_types = ", ".join(SUPPORTED_FILE_EXTENSIONS)
         return f"Error: Unsupported file type: {file_extension}. Supported file types include {supported_types}."
+
+
+def check_resume_extract_type(extract_type):
+    # Check if the extract type is supported for resume_extract
+    if extract_type not in SUPPORTED_RESUME_EXTRACT_TYPES:
+        supported_types = ", ".join(SUPPORTED_RESUME_EXTRACT_TYPES)
+        return f"Error: Unsupported resume extract type: {extract_type}. Supported extract types include {supported_types}."

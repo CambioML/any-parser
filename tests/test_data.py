@@ -81,6 +81,11 @@ EXTRACT_RESUME_TEST_DATA = [
     {
         "working_file": "./examples/sample_data/test_resume.pdf",
         "correct_output": {
+            "pii": {
+                "full_name": "John Doe",
+                "email": "johndoe@example.com",
+                "phone": "(123) 456-7890",
+            },
             "personal_info": {
                 "name": "John Doe",
                 "phone_number": "+1-123-456-7890",

@@ -13,6 +13,7 @@ from any_parser.utils import (
     ModelType,
     check_file_type_and_path,
     check_model,
+    check_resume_extract_type,
     upload_file_to_presigned_url,
 )
 
@@ -204,17 +205,18 @@ class AnyParser:
                 - "skills": Skills
                 - "certifications": Certifications
                 - "projects": Projects
+                - "pii": Personally Identifiable Information - includes only name, email, and phone
         Returns:
             tuple(str, str): The extracted data and the time taken.
         """
         file_extension = Path(file_path).suffix.lower().lstrip(".")
 
         # Check if the file exists and file_type
-        error = self._check_file_type_and_path(file_path, file_extension)
+        error = check_file_type_and_path(file_path, file_extension)
         if error:
             return error, None
 
-        error = self._check_resume_extract_type(extract_type)
+        error = check_resume_extract_type(extract_type)
         if error:
             return error, None
 
