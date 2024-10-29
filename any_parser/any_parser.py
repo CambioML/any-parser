@@ -25,6 +25,7 @@ class ProcessType(Enum):
     TABLE = "table"
     FILE_REFINED = "file_refined"
     FILE_REFINED_QUICK = "file_refined_quick"
+    FILE_ADVANCED = "file_advanced"
 
 
 class AnyParser:
@@ -221,6 +222,8 @@ class AnyParser:
             process_type = ProcessType.FILE
         elif model == ModelType.PRO:
             process_type = ProcessType.FILE_REFINED_QUICK
+        elif model == ModelType.ADVANCED:
+            process_type = ProcessType.FILE_ADVANCED
         else:
             return "Error: Invalid model type", None
 
