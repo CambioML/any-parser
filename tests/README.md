@@ -12,7 +12,7 @@ In the `dev.dependencies` section of the `pyproject.toml` file, you will see the
 
 2. Add a `.env` file in the `tests` folder with the following content:
 ```bash
-API_KEY=*************
+CAMBIO_API_KEY=*************
 ```
 
 ## Pre-commit
