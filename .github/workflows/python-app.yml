@@ -48,4 +48,4 @@ jobs:
       env:
         CAMBIO_API_KEY: ${{ secrets.CAMBIO_API_KEY }}
       run: |
-        poetry run python -m unittest discover tests
+        poetry run python -m unittest discover -v tests
