@@ -36,9 +36,9 @@ class TestAnyParser(unittest.TestCase):
     """Testing Any Parser"""
 
     def setUp(self):
-        self.api_key = os.environ.get("API_KEY")
+        self.api_key = os.environ.get("CAMBIO_API_KEY")
         if not self.api_key:
-            raise ValueError("API_KEY is not set")
+            raise ValueError("CAMBIO_API_KEY is not set")
         self.ap = AnyParser(self.api_key)
 
     def test_pdf_sync_extract(self):
