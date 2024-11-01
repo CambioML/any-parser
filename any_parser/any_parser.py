@@ -43,6 +43,7 @@ class AnyParser:
         """
         self._sync_extract_url = f"{base_url}/extract"
         self._sync_json_url = f"{base_url}/json/extract"
+        self._sync_resume_url = f"{base_url}/resume/extract"
         self._sync_refined_url = f"{base_url}/refined_parse"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
@@ -188,6 +189,66 @@ class AnyParser:
         else:
             return f"Error: {response.status_code} {response.text}", None
 
+    def resume_extract(
+        self,
+        file_path: str,
+    ) -> Tuple[str, str]:
+        """Extract resume in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+                extracted data includes:
+                    - "education": Education
+                    - "work_experience": Work Experience
+                    - "personal_info": Personal Information
+                    - "skills": Skills
+                    - "certifications": Certifications
+                    - "projects": Projects
+                    - "pii": Personally Identifiable Information - includes only name, email, and phone
+        """
+        file_extension = Path(file_path).suffix.lower().lstrip(".")
+
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
+        if error:
+            return error, None
+
+        # Encode the file content in base64
+        with open(file_path, "rb") as file:
+            encoded_file = base64.b64encode(file.read()).decode("utf-8")
+
+        # Create the JSON payload
+        payload = {
+            "file_content": encoded_file,
+            "file_type": file_extension,
+        }
+
+        # Send the POST request
+        start_time = time.time()
+        response = requests.post(
+            self._sync_resume_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
+        )
+        end_time = time.time()
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            try:
+                response_data = response.json()
+                result = response_data["extraction_result"]
+                return (
+                    result,
+                    f"Time Elapsed: {end_time - start_time:.2f} seconds",
+                )
+            except json.JSONDecodeError:
+                return f"Error: Invalid JSON response: {response.text}", None
+        else:
+            return f"Error: {response.status_code} {response.text}", None
+
     def async_extract(
         self,
         file_path: str,
@@ -289,6 +350,44 @@ class AnyParser:
         # If response successful, upload the file
         return upload_file_to_presigned_url(file_path, response)
 
+    def async_extract_resume_key_value(
+        self,
+        file_path: str,
+    ) -> str:
+        """Extract key-value pairs from a file asynchronously.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        file_extension = Path(file_path).suffix.lower().lstrip(".")
+
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
+
+        if error:
+            return error, None
+
+        file_name = Path(file_path).name
+
+        # Create the JSON payload
+        payload = {
+            "file_name": file_name,
+            "process_type": "resume_extract",
+        }
+
+        # Send the POST request
+        response = requests.post(
+            self._async_upload_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
+        )
+
+        # If response successful, upload the file
+        return upload_file_to_presigned_url(file_path, response)
+
     def async_fetch(
         self,
         file_id: str,
@@ -340,6 +439,8 @@ class AnyParser:
             result = response.json()
             if "json" in result:
                 return result["json"]
+            elif "resume_extraction" in result:
+                return result["resume_extraction"]
             elif "markdown" in result:
                 markdown_list = result["markdown"]
                 return "\n".join(markdown_list)
