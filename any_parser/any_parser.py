@@ -283,7 +283,7 @@ class AnyParser:
             process_type = ProcessType.FILE
         elif model == ModelType.PRO:
             process_type = ProcessType.FILE_REFINED_QUICK
-        elif model == ModelType.ADVANCED:
+        elif model == ModelType.PARSE_WITH_LAYOUT:
             process_type = ProcessType.PARSE_WITH_LAYOUT
         else:
             return "Error: Invalid model type", None
