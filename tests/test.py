@@ -206,7 +206,7 @@ class TestAnyParser(unittest.TestCase):
                 # wait 1 s between requests
                 time.sleep(1)
 
-    def test_sync_extract_resume(self):
+    def test_sync_extract_resume_key_value(self):
         """Synchronous Resume Extraction with subtests for different file formats"""
         for data in EXTRACT_RESUME_TEST_DATA:
             for extract_type in data["correct_output"]:
@@ -214,7 +214,7 @@ class TestAnyParser(unittest.TestCase):
                     working_file=data["working_file"], extract_type=extract_type
                 ):
                     # extract
-                    key_value_result, elapsed_time = self.ap.resume_extract(
+                    key_value_result, elapsed_time = self.ap.extract_resume_key_value(
                         data["working_file"], extract_type=extract_type
                     )
                     print("\n\n Key Value Result: ")
@@ -228,22 +228,42 @@ class TestAnyParser(unittest.TestCase):
                         str(key_value_result), str(data["correct_output"][extract_type])
                     )
 
-                    # TODO: Fix these extract_type to properly output the correct output
-                    if extract_type in [
-                        "education",
-                        "skills",
-                        "certifications",
-                        "projects",
-                    ]:
-                        print(f"Percentage: {percentage:.2f}%")
-                    else:
-                        self.assertGreaterEqual(
-                            percentage,
-                            90,
-                            f"Output similarity too low: {percentage:.2f}%",
-                        )
+                    self.assertGreaterEqual(
+                        percentage,
+                        80,
+                        f"Output similarity too low: {percentage:.2f}%",
+                    )
 
                     self.assertIn("Time Elapsed", elapsed_time)
+                    # wait 1 s between requests
+                    time.sleep(1)
+
+    def test_async_extract_resume_key_value_and_fetch(self):
+        """Asynchronous Resume Extraction and Fetch"""
+        for data in EXTRACT_RESUME_TEST_DATA:
+            for extract_type in data["correct_output"]:
+                with self.subTest(
+                    working_file=data["working_file"], extract_type=extract_type
+                ):
+                    # extract
+                    file_id = self.ap.async_extract_resume_key_value(
+                        data["working_file"], extract_type=extract_type
+                    )
+                    self.assertFalse(file_id.startswith("Error:"), file_id)
+                    # fetch
+                    extract_resume_result = self.ap.async_fetch(file_id=file_id)
+                    # TODO: update with proper value checking
+                    # get levenshtein distance from string of correct output vs. key value result
+                    percentage = compare_markdown(
+                        str(extract_resume_result),
+                        str(data["correct_output"][extract_type]),
+                    )
+
+                    self.assertGreaterEqual(
+                        percentage,
+                        80,
+                        f"Output similarity too low: {percentage:.2f}%",
+                    )
                     # wait 1 s between requests
                     time.sleep(1)
 

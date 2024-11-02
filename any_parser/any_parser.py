@@ -189,7 +189,7 @@ class AnyParser:
         else:
             return f"Error: {response.status_code} {response.text}", None
 
-    def resume_extract(
+    def extract_resume_key_value(
         self,
         file_path: str,
         extract_type: Dict,
@@ -356,6 +356,59 @@ class AnyParser:
         # If response successful, upload the file
         return upload_file_to_presigned_url(file_path, response)
 
+    def async_extract_resume_key_value(
+        self,
+        file_path: str,
+        extract_type: str,
+    ) -> str:
+        """Extract key-value pairs from a resume asynchronously.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+            extract_type (str): The type of extraction to be performed. It can be one of the following:
+                - "education": Education
+                - "work_experience": Work Experience
+                - "personal_info": Personal Information
+                - "skills": Skills
+                - "certifications": Certifications
+                - "projects": Projects
+                - "pii": Personally Identifiable Information - includes only name, email, and phone
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        file_extension = Path(file_path).suffix.lower().lstrip(".")
+
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
+        if error:
+            return error, None
+
+        error = check_resume_extract_type(extract_type)
+        if error:
+            return error, None
+
+        file_name = Path(file_path).name
+
+        # Create the JSON payload
+        payload = {
+            "file_name": file_name,
+            "process_type": "resume_extract",
+            "extract_args": {
+                "extract_type": extract_type,
+            },
+        }
+
+        # Send the POST request
+        response = requests.post(
+            self._async_upload_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
+        )
+
+        # If response successful, upload the file
+        return upload_file_to_presigned_url(file_path, response)
+
     def async_fetch(
         self,
         file_id: str,
@@ -407,6 +460,8 @@ class AnyParser:
             result = response.json()
             if "json" in result:
                 return result["json"]
+            elif "resume_extraction" in result:
+                return result["resume_extraction"]
             elif "markdown" in result:
                 markdown_list = result["markdown"]
                 return "\n".join(markdown_list)
