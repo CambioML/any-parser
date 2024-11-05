@@ -283,8 +283,6 @@ class AnyParser:
             process_type = ProcessType.FILE
         elif model == ModelType.PRO:
             process_type = ProcessType.FILE_REFINED_QUICK
-        elif model == ModelType.PARSE_WITH_LAYOUT:
-            process_type = ProcessType.PARSE_WITH_LAYOUT
         else:
             return "Error: Invalid model type", None
 
@@ -296,6 +294,44 @@ class AnyParser:
 
         if extract_args is not None and isinstance(extract_args, dict):
             payload["extract_args"] = extract_args
+
+        # Send the POST request
+        response = requests.post(
+            self._async_upload_url,
+            headers=self._headers,
+            data=json.dumps(payload),
+            timeout=TIMEOUT,
+        )
+
+        # If response successful, upload the file
+        return upload_file_to_presigned_url(file_path, response)
+
+    def async_parse_with_layout(self, file_path: str) -> str:
+        """Extract full content from a file asynchronously.
+
+        Compared with `async_extract`, this method will first analyze the layout of the file.
+        Then it will process text, tables, and images separately;
+        and return the combined result in markdown format.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        file_extension = Path(file_path).suffix.lower().lstrip(".")
+
+        # Check if the file exists and file_type
+        error = check_file_type_and_path(file_path, file_extension)
+
+        if error:
+            return error, None
+
+        file_name = Path(file_path).name
+        # Create the JSON payload
+        payload = {
+            "file_name": file_name,
+            "process_type": "parse_with_layout",
+        }
 
         # Send the POST request
         response = requests.post(

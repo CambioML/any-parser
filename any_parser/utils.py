@@ -8,7 +8,6 @@ import requests
 class ModelType(Enum):
     BASE = "base"
     PRO = "pro"
-    PARSE_WITH_LAYOUT = "parse_with_layout"
 
 
 SUPPORTED_FILE_EXTENSIONS = [
@@ -49,7 +48,7 @@ def upload_file_to_presigned_url(
 
 
 def check_model(model: ModelType) -> None:
-    if model not in {ModelType.BASE, ModelType.PRO, ModelType.PARSE_WITH_LAYOUT}:
+    if model not in {ModelType.BASE, ModelType.PRO}:
         valid_models = ", ".join(["`" + model.value + "`" for model in ModelType])
         return f"Invalid model type: {model}. Supported `model` types include {valid_models}."
 
