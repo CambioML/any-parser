@@ -189,7 +189,7 @@ class AnyParser:
         else:
             return f"Error: {response.status_code} {response.text}", None
 
-    def resume_extract(
+    def extract_resume_key_value(
         self,
         file_path: str,
     ) -> Tuple[str, str]:
