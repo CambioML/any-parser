@@ -22,9 +22,8 @@ TIMEOUT = 60
 
 class ProcessType(Enum):
     FILE = "file"
-    TABLE = "table"
-    FILE_REFINED = "file_refined"
-    FILE_REFINED_QUICK = "file_refined_quick"
+    EXTRACT_TABLES = "extract_tables"
+    PARSE_WITH_OCR = "parse_with_ocr"
     PARSE_WITH_LAYOUT = "parse_with_layout"
 
 
@@ -42,9 +41,9 @@ class AnyParser:
             None
         """
         self._sync_extract_url = f"{base_url}/extract"
-        self._sync_json_url = f"{base_url}/json/extract"
-        self._sync_resume_url = f"{base_url}/resume/extract"
-        self._sync_refined_url = f"{base_url}/refined_parse"
+        self._sync_extract_key_value = f"{base_url}/extract_key_value"
+        self._sync_extract_resume_key_value = f"{base_url}/extract_resume_key_value"
+        self._sync_parse_with_ocr = f"{base_url}/parse_with_ocr"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
         self._api_key = api_key
@@ -100,7 +99,8 @@ class AnyParser:
         if model == ModelType.BASE:
             url = self._sync_extract_url
         elif model == ModelType.PRO:
-            url = self._sync_refined_url
+            # TODO: this will timeout
+            url = self._sync_parse_with_ocr
             if model == ModelType.PRO:
                 payload["quick_mode"] = True
         else:
@@ -162,13 +162,13 @@ class AnyParser:
         payload = {
             "file_content": encoded_file,
             "file_type": file_extension,
-            "instruction_args": {"extract_instruction": extract_instruction},
+            "extract_args": {"extract_instruction": extract_instruction},
         }
 
         # Send the POST request
         start_time = time.time()
         response = requests.post(
-            self._sync_json_url,
+            self._sync_extract_key_value,
             headers=self._headers,
             data=json.dumps(payload),
             timeout=TIMEOUT,
@@ -228,7 +228,7 @@ class AnyParser:
         # Send the POST request
         start_time = time.time()
         response = requests.post(
-            self._sync_resume_url,
+            self._sync_extract_resume_key_value,
             headers=self._headers,
             data=json.dumps(payload),
             timeout=TIMEOUT,
@@ -282,7 +282,7 @@ class AnyParser:
         if model == ModelType.BASE:
             process_type = ProcessType.FILE
         elif model == ModelType.PRO:
-            process_type = ProcessType.FILE_REFINED_QUICK
+            process_type = ProcessType.PARSE_WITH_OCR
         else:
             return "Error: Invalid model type", None
 
@@ -371,7 +371,7 @@ class AnyParser:
         # Create the JSON payload
         payload = {
             "file_name": file_name,
-            "process_type": "json",
+            "process_type": "extract_key_value",
             "extract_args": {"extract_instruction": extract_instruction},
         }
 
@@ -410,7 +410,7 @@ class AnyParser:
         # Create the JSON payload
         payload = {
             "file_name": file_name,
-            "process_type": "resume_extract",
+            "process_type": "extract_resume_key_value",
         }
 
         # Send the POST request
