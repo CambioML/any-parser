@@ -54,7 +54,7 @@ class AnyParser:
 
     def _get_sync_response(
         self, url_endpoint: str, file_path: str, extract_args: Optional[Dict] = None
-    ) -> Tuple[requests.Response | None, str]:
+    ) -> Tuple[Optional[requests.Response], str]:
         """Extract full content from a file in real-time.
 
         Args:
