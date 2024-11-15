@@ -11,7 +11,7 @@ import requests
 
 from any_parser.utils import check_file_type_and_path, upload_file_to_presigned_url
 
-PUBLIC_SHARED_BASE_URL = "https://3urw2x5zhi.execute-api.us-west-2.amazonaws.com/v1/"
+PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
 
 
