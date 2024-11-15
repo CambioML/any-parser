@@ -1,14 +1,7 @@
 import json
-from enum import Enum
 from pathlib import Path
 
 import requests
-
-
-class ModelType(Enum):
-    BASE = "base"
-    PRO = "pro"
-
 
 SUPPORTED_FILE_EXTENSIONS = [
     "pdf",
@@ -45,12 +38,6 @@ def upload_file_to_presigned_url(
             return "Error: Invalid JSON response"
     else:
         return f"Error: {response.status_code} {response.text}"
-
-
-def check_model(model: ModelType) -> None:
-    if model not in {ModelType.BASE, ModelType.PRO}:
-        valid_models = ", ".join(["`" + model.value + "`" for model in ModelType])
-        return f"Invalid model type: {model}. Supported `model` types include {valid_models}."
 
 
 def check_file_type_and_path(file_path, file_extension):

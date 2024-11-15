@@ -41,13 +41,13 @@ class TestAnyParser(unittest.TestCase):
             raise ValueError("CAMBIO_API_KEY is not set")
         self.ap = AnyParser(self.api_key)
 
-    def test_pdf_sync_extract(self):
-        """Synchronous PDF Extraction"""
+    def test_pdf_sync_parse(self):
+        """Synchronous PDF Parse"""
         working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.extract(working_file)
+        markdown, elapsed_time = self.ap.parse(working_file)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -57,13 +57,13 @@ class TestAnyParser(unittest.TestCase):
         )
         self.assertIn("Time Elapsed", elapsed_time)
 
-    def test_pdf_async_extract_and_fetch(self):
-        """Asynchronous PDF Extraction and Fetch"""
+    def test_pdf_async_parse_and_fetch(self):
+        """Asynchronous PDF Parse and Fetch"""
         working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         # extract
-        file_id = self.ap.async_extract(working_file)
+        file_id = self.ap.async_parse(working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown = self.ap.async_fetch(file_id=file_id)
@@ -81,7 +81,7 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_docx_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.extract(working_file)
+        markdown, elapsed_time = self.ap.parse(working_file)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -91,13 +91,13 @@ class TestAnyParser(unittest.TestCase):
         )
         self.assertIn("Time Elapsed", elapsed_time)
 
-    def test_docx_async_extract_and_fetch(self):
-        """Asynchronous Word Extraction and Fetch"""
+    def test_docx_async_parse_and_fetch(self):
+        """Asynchronous Word Parse and Fetch"""
         working_file = "./examples/sample_data/test_odf.docx"
         correct_output_file = "./tests/outputs/correct_docx_output.txt"
 
         # extract
-        file_id = self.ap.async_extract(working_file)
+        file_id = self.ap.async_parse(working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown = self.ap.async_fetch(file_id=file_id)
@@ -115,7 +115,7 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_pptx_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.extract(working_file)
+        markdown, elapsed_time = self.ap.parse(working_file)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -125,13 +125,13 @@ class TestAnyParser(unittest.TestCase):
         )
         self.assertIn("Time Elapsed", elapsed_time)
 
-    def test_pptx_async_extract_and_fetch(self):
-        """Asynchronous Powerpoint Extraction and Fetch"""
+    def test_pptx_async_parse_and_fetch(self):
+        """Asynchronous Powerpoint Parse and Fetch"""
         working_file = "./examples/sample_data/test_odf.pptx"
         correct_output_file = "./tests/outputs/correct_pptx_output.txt"
 
         # extract
-        file_id = self.ap.async_extract(working_file)
+        file_id = self.ap.async_parse(working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown = self.ap.async_fetch(file_id=file_id)
@@ -149,7 +149,7 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_png_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.extract(working_file)
+        markdown, elapsed_time = self.ap.parse(working_file)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -159,13 +159,13 @@ class TestAnyParser(unittest.TestCase):
         )
         self.assertIn("Time Elapsed", elapsed_time)
 
-    def test_image_async_extract_and_fetch(self):
-        """Asynchronous Image Extraction and Fetch"""
+    def test_image_async_parse_and_fetch(self):
+        """Asynchronous Image Parse and Fetch"""
         working_file = "./examples/sample_data/test3.png"
         correct_output_file = "./tests/outputs/correct_png_output.txt"
 
         # extract
-        file_id = self.ap.async_extract(working_file)
+        file_id = self.ap.async_parse(working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown = self.ap.async_fetch(file_id=file_id)

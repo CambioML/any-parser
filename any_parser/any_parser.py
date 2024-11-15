@@ -9,22 +9,19 @@ from typing import Dict, Optional, Tuple
 
 import requests
 
-from any_parser.utils import (
-    ModelType,
-    check_file_type_and_path,
-    check_model,
-    upload_file_to_presigned_url,
-)
+from any_parser.utils import check_file_type_and_path, upload_file_to_presigned_url
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
 
 
 class ProcessType(Enum):
-    FILE = "file"
-    TABLE = "table"
-    FILE_REFINED = "file_refined"
-    FILE_REFINED_QUICK = "file_refined_quick"
+    EXTRACT_PII = "extract_pii"
+    EXTRACT_TABLES = "extract_tables"
+    EXTRACT_KEY_VALUE = "extract_key_value"
+    EXTRACT_RESUME_KEY_VALUE = "extract_resume_key_value"
+    PARSE = "parse"
+    PARSE_WITH_OCR = "parse_with_ocr"
     PARSE_WITH_LAYOUT = "parse_with_layout"
 
 
@@ -41,10 +38,12 @@ class AnyParser:
         Returns:
             None
         """
-        self._sync_extract_url = f"{base_url}/extract"
-        self._sync_json_url = f"{base_url}/json/extract"
-        self._sync_resume_url = f"{base_url}/resume/extract"
-        self._sync_refined_url = f"{base_url}/refined_parse"
+        self._sync_parse_url = f"{base_url}/parse"
+        self._sync_extract_pii = f"{base_url}/extract_pii"
+        self._sync_extract_tables = f"{base_url}/extract_tables"
+        self._sync_extract_key_value = f"{base_url}/extract_key_value"
+        self._sync_extract_resume_key_value = f"{base_url}/extract_resume_key_value"
+        self._sync_parse_with_ocr = f"{base_url}/parse_with_ocr"
         self._async_upload_url = f"{base_url}/async/upload"
         self._async_fetch_url = f"{base_url}/async/fetch"
         self._api_key = api_key
@@ -53,36 +52,28 @@ class AnyParser:
             "x-api-key": self._api_key,
         }
 
-    def extract(
-        self,
-        file_path: str,
-        model: ModelType = ModelType.BASE,
-        extract_args: Optional[Dict] = None,
-    ) -> Tuple[str, str]:
+    def _get_sync_response(
+        self, url_endpoint: str, file_path: str, extract_args: Optional[Dict] = None
+    ) -> Tuple[Optional[requests.Response], str]:
         """Extract full content from a file in real-time.
 
         Args:
+            url_endpoint (str): The URL endpoint for the API.
             file_path (str): The path to the file to be parsed.
-            model (ModelType): The model to use for extraction. Can be
-                `ModelType.BASE` or `ModelType.PRO`. Defaults to `ModelType.BASE`.
-            extract_args (Optional[Dict]): Additional extraction arguments added
-                to the prompt.
+            extract_args (Optional[Dict]): Additional extraction arguments.
 
         Returns:
-            tuple(str, str): The extracted data and the time taken.
+            tuple(requests.Response | None, str): The response object and the
+            time taken. If the file is invalid or the API request fails,
+            returns None and an error message.
         """
 
         file_extension = Path(file_path).suffix.lower().lstrip(".")
 
         # Check if the file exists and file_type
         error = check_file_type_and_path(file_path, file_extension)
-
         if error:
-            return error, None
-
-        error = check_model(model)
-        if error:
-            return error, None
+            return None, error
 
         # Encode the file content in base64
         with open(file_path, "rb") as file:
@@ -97,171 +88,35 @@ class AnyParser:
         if extract_args is not None and isinstance(extract_args, dict):
             payload["extract_args"] = extract_args
 
-        if model == ModelType.BASE:
-            url = self._sync_extract_url
-        elif model == ModelType.PRO:
-            url = self._sync_refined_url
-            if model == ModelType.PRO:
-                payload["quick_mode"] = True
-        else:
-            return "Error: Invalid model type", None
-
         # Send the POST request
         start_time = time.time()
         response = requests.post(
-            url,
+            url_endpoint,
             headers=self._headers,
             data=json.dumps(payload),
             timeout=TIMEOUT,
         )
         end_time = time.time()
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            try:
-                response_data = response.json()
-                response_list = []
-                for text in response_data["markdown"]:
-                    response_list.append(text)
-                markdown_text = "\n".join(response_list)
-                return (
-                    markdown_text,
-                    f"Time Elapsed: {end_time - start_time:.2f} seconds",
-                )
-            except json.JSONDecodeError:
-                return f"Error: Invalid JSON response: {response.text}", None
-        else:
-            return f"Error: {response.status_code} {response.text}", None
+        if response.status_code != 200:
+            return None, f"Error: {response.status_code} {response.text}"
 
-    def extract_key_value(
+        return response, f"{end_time - start_time:.2f} seconds"
+
+    def _send_async_request(
         self,
+        process_type: ProcessType,
         file_path: str,
-        extract_instruction: Dict,
-    ) -> Tuple[str, str]:
-        """Extract key-value pairs from a file in real-time.
-
-        Args:
-            file_path (str): The path to the file to be parsed.
-            extract_instruction (Dict): A dictionary containing the keys to be
-                extracted, with their values as the description of those keys.
-        Returns:
-            tuple(str, str): The extracted data and the time taken.
-        """
-        file_extension = Path(file_path).suffix.lower().lstrip(".")
-
-        # Check if the file exists and file_type
-        error = check_file_type_and_path(file_path, file_extension)
-        if error:
-            return error, None
-
-        # Encode the file content in base64
-        with open(file_path, "rb") as file:
-            encoded_file = base64.b64encode(file.read()).decode("utf-8")
-
-        # Create the JSON payload
-        payload = {
-            "file_content": encoded_file,
-            "file_type": file_extension,
-            "instruction_args": {"extract_instruction": extract_instruction},
-        }
-
-        # Send the POST request
-        start_time = time.time()
-        response = requests.post(
-            self._sync_json_url,
-            headers=self._headers,
-            data=json.dumps(payload),
-            timeout=TIMEOUT,
-        )
-        end_time = time.time()
-
-        # Check if the request was successful
-        if response.status_code == 200:
-            try:
-                response_data = response.json()
-                result = response_data["json"]
-                return (
-                    result,
-                    f"Time Elapsed: {end_time - start_time:.2f} seconds",
-                )
-            except json.JSONDecodeError:
-                return f"Error: Invalid JSON response: {response.text}", None
-        else:
-            return f"Error: {response.status_code} {response.text}", None
-
-    def extract_resume_key_value(
-        self,
-        file_path: str,
-    ) -> Tuple[str, str]:
-        """Extract resume in real-time.
-
-        Args:
-            file_path (str): The path to the file to be parsed.
-        Returns:
-            tuple(str, str): The extracted data and the time taken.
-                extracted data includes:
-                    - "education": Education
-                    - "work_experience": Work Experience
-                    - "personal_info": Personal Information
-                    - "skills": Skills
-                    - "certifications": Certifications
-                    - "projects": Projects
-                    - "pii": Personally Identifiable Information - includes only name, email, and phone
-        """
-        file_extension = Path(file_path).suffix.lower().lstrip(".")
-
-        # Check if the file exists and file_type
-        error = check_file_type_and_path(file_path, file_extension)
-        if error:
-            return error, None
-
-        # Encode the file content in base64
-        with open(file_path, "rb") as file:
-            encoded_file = base64.b64encode(file.read()).decode("utf-8")
-
-        # Create the JSON payload
-        payload = {
-            "file_content": encoded_file,
-            "file_type": file_extension,
-        }
-
-        # Send the POST request
-        start_time = time.time()
-        response = requests.post(
-            self._sync_resume_url,
-            headers=self._headers,
-            data=json.dumps(payload),
-            timeout=TIMEOUT,
-        )
-        end_time = time.time()
-
-        # Check if the request was successful
-        if response.status_code == 200:
-            try:
-                response_data = response.json()
-                result = response_data["extraction_result"]
-                return (
-                    result,
-                    f"Time Elapsed: {end_time - start_time:.2f} seconds",
-                )
-            except json.JSONDecodeError:
-                return f"Error: Invalid JSON response: {response.text}", None
-        else:
-            return f"Error: {response.status_code} {response.text}", None
-
-    def async_extract(
-        self,
-        file_path: str,
-        model: ModelType = ModelType.BASE,
         extract_args: Optional[Dict] = None,
     ) -> str:
         """Extract full content from a file asynchronously.
 
         Args:
+            url_endpoint (str): The URL endpoint for the API.
             file_path (str): The path to the file to be parsed.
-            model (ModelType): The model to use for extraction. Can be
-                `ModelType.BASE` or `ModelType.PRO`. Defaults to `ModelType.BASE`.
-            extract_args (Optional[Dict]): Additional extraction arguments added to prompt
+            process_type (ProcessType): The type of processing to be done.
+            extract_args (Optional[Dict]): Additional extraction arguments.
+
         Returns:
             str: The file id of the uploaded file.
         """
@@ -269,22 +124,10 @@ class AnyParser:
 
         # Check if the file exists and file_type
         error = check_file_type_and_path(file_path, file_extension)
-
         if error:
-            return error, None
-
-        error = check_model(model)
-        if error:
-            return error, None
+            return error
 
         file_name = Path(file_path).name
-
-        if model == ModelType.BASE:
-            process_type = ProcessType.FILE
-        elif model == ModelType.PRO:
-            process_type = ProcessType.FILE_REFINED_QUICK
-        else:
-            return "Error: Invalid model type", None
 
         # Create the JSON payload
         payload = {
@@ -306,6 +149,191 @@ class AnyParser:
         # If response successful, upload the file
         return upload_file_to_presigned_url(file_path, response)
 
+    def parse(
+        self,
+        file_path: str,
+        extract_args: Optional[Dict] = None,
+    ) -> Tuple[str, str]:
+        """Extract full content from a file in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+            extract_args (Optional[Dict]): Additional extraction arguments added
+                to the prompt.
+
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+        """
+
+        response, info = self._get_sync_response(
+            self._sync_parse_url,
+            file_path,
+            extract_args=extract_args,
+        )
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            response_list = []
+            for text in response_data["markdown"]:
+                response_list.append(text)
+            markdown_text = "\n".join(response_list)
+            return (
+                markdown_text,
+                f"Time Elapsed: {info}",
+            )
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+    def extract_pii(
+        self,
+        file_path: str,
+    ) -> Tuple[str, str]:
+        """Extract personally identifiable information (PII) from a file in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+        """
+        response, info = self._get_sync_response(
+            self._sync_extract_pii,
+            file_path,
+            extract_args=None,
+        )
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            return (
+                response_data["pii_extraction"],
+                f"Time Elapsed: {info}",
+            )
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+    def extract_tables(
+        self,
+        file_path: str,
+    ) -> Tuple[str, str]:
+        """Extract tables from a file in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+        """
+        response, info = self._get_sync_response(
+            self._sync_extract_tables,
+            file_path,
+            extract_args=None,
+        )
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            response_list = []
+            for text in response_data["markdown"]:
+                response_list.append(text)
+            markdown_text = "\n".join(response_list)
+            return (
+                markdown_text,
+                f"Time Elapsed: {info}",
+            )
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+    def extract_key_value(
+        self,
+        file_path: str,
+        extract_instruction: Dict,
+    ) -> Tuple[str, str]:
+        """Extract key-value pairs from a file in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+            extract_instruction (Dict): A dictionary containing the keys to be
+                extracted, with their values as the description of those keys.
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+        """
+        response, info = self._get_sync_response(
+            self._sync_extract_key_value,
+            file_path,
+            extract_args={"extract_instruction": extract_instruction},
+        )
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            result = response_data["json"]
+            return (
+                result,
+                f"Time Elapsed: {info}",
+            )
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+    def extract_resume_key_value(
+        self,
+        file_path: str,
+    ) -> Tuple[str, str]:
+        """Extract resume in real-time.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            tuple(str, str): The extracted data and the time taken.
+                extracted data includes:
+                    - "education": Education
+                    - "work_experience": Work Experience
+                    - "personal_info": Personal Information
+                    - "skills": Skills
+                    - "certifications": Certifications
+                    - "projects": Projects
+                    - "pii": Personally Identifiable Information - includes only name, email, and phone
+        """
+        response, info = self._get_sync_response(
+            self._sync_extract_resume_key_value,
+            file_path,
+            extract_args=None,
+        )
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            result = response_data["extraction_result"]
+            return (
+                result,
+                f"Time Elapsed: {info}",
+            )
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+    def async_parse(
+        self,
+        file_path: str,
+        extract_args: Optional[Dict] = None,
+    ) -> str:
+        """Extract full content from a file asynchronously.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+            extract_args (Optional[Dict]): Additional extraction arguments added to prompt
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        return self._send_async_request(
+            ProcessType.PARSE,
+            file_path,
+            extract_args=extract_args,
+        )
+
     def async_parse_with_layout(self, file_path: str) -> str:
         """Extract full content from a file asynchronously.
 
@@ -318,31 +346,57 @@ class AnyParser:
         Returns:
             str: The file id of the uploaded file.
         """
-        file_extension = Path(file_path).suffix.lower().lstrip(".")
-
-        # Check if the file exists and file_type
-        error = check_file_type_and_path(file_path, file_extension)
-
-        if error:
-            return error, None
-
-        file_name = Path(file_path).name
-        # Create the JSON payload
-        payload = {
-            "file_name": file_name,
-            "process_type": "parse_with_layout",
-        }
-
-        # Send the POST request
-        response = requests.post(
-            self._async_upload_url,
-            headers=self._headers,
-            data=json.dumps(payload),
-            timeout=TIMEOUT,
+        return self._send_async_request(
+            ProcessType.PARSE_WITH_LAYOUT,
+            file_path,
+            extract_args=None,
         )
 
-        # If response successful, upload the file
-        return upload_file_to_presigned_url(file_path, response)
+    def async_parse_with_ocr(self, file_path: str) -> str:
+        """Extract full content from a file asynchronously.
+
+        Compared with `async_extract`, this method will first perform OCR on the file.
+        Then it will process text, tables, and images separately;
+        and return the combined result in markdown format.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        return self._send_async_request(
+            ProcessType.PARSE_WITH_OCR,
+            file_path,
+            extract_args=None,
+        )
+
+    def async_extract_pii(self, file_path: str) -> str:
+        """Extract personally identifiable information (PII) from a file asynchronously.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        return self._send_async_request(
+            ProcessType.EXTRACT_PII,
+            file_path,
+            extract_args=None,
+        )
+
+    def async_extract_tables(self, file_path: str) -> str:
+        """Extract tables from a file asynchronously.
+
+        Args:
+            file_path (str): The path to the file to be parsed.
+        Returns:
+            str: The file id of the uploaded file.
+        """
+        return self._send_async_request(
+            ProcessType.EXTRACT_TABLES,
+            file_path,
+            extract_args=None,
+        )
 
     def async_extract_key_value(
         self,
@@ -358,33 +412,11 @@ class AnyParser:
         Returns:
             str: The file id of the uploaded file.
         """
-        file_extension = Path(file_path).suffix.lower().lstrip(".")
-
-        # Check if the file exists and file_type
-        error = check_file_type_and_path(file_path, file_extension)
-
-        if error:
-            return error, None
-
-        file_name = Path(file_path).name
-
-        # Create the JSON payload
-        payload = {
-            "file_name": file_name,
-            "process_type": "json",
-            "extract_args": {"extract_instruction": extract_instruction},
-        }
-
-        # Send the POST request
-        response = requests.post(
-            self._async_upload_url,
-            headers=self._headers,
-            data=json.dumps(payload),
-            timeout=TIMEOUT,
+        return self._send_async_request(
+            ProcessType.EXTRACT_KEY_VALUE,
+            file_path,
+            extract_args={"extract_instruction": extract_instruction},
         )
-
-        # If response successful, upload the file
-        return upload_file_to_presigned_url(file_path, response)
 
     def async_extract_resume_key_value(
         self,
@@ -397,32 +429,11 @@ class AnyParser:
         Returns:
             str: The file id of the uploaded file.
         """
-        file_extension = Path(file_path).suffix.lower().lstrip(".")
-
-        # Check if the file exists and file_type
-        error = check_file_type_and_path(file_path, file_extension)
-
-        if error:
-            return error, None
-
-        file_name = Path(file_path).name
-
-        # Create the JSON payload
-        payload = {
-            "file_name": file_name,
-            "process_type": "resume_extract",
-        }
-
-        # Send the POST request
-        response = requests.post(
-            self._async_upload_url,
-            headers=self._headers,
-            data=json.dumps(payload),
-            timeout=TIMEOUT,
+        return self._send_async_request(
+            ProcessType.EXTRACT_RESUME_KEY_VALUE,
+            file_path,
+            extract_args=None,
         )
-
-        # If response successful, upload the file
-        return upload_file_to_presigned_url(file_path, response)
 
     def async_fetch(
         self,
@@ -477,6 +488,8 @@ class AnyParser:
                 return result["json"]
             elif "resume_extraction" in result:
                 return result["resume_extraction"]
+            elif "pii_extraction" in result:
+                return result["pii_extraction"]
             elif "markdown" in result:
                 markdown_list = result["markdown"]
                 return "\n".join(markdown_list)
