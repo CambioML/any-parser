@@ -213,7 +213,7 @@ class AnyParser:
             )
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
-        
+
     def extract_tables(
         self,
         file_path: str,
@@ -383,7 +383,7 @@ class AnyParser:
             file_path,
             extract_args=None,
         )
-    
+
     def async_extract_tables(self, file_path: str) -> str:
         """Extract tables from a file asynchronously.
 
