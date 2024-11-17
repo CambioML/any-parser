@@ -52,14 +52,14 @@ ap = AnyParser(api_key=example_apikey)
 To extract data synchronously and receive immediate results:
 ```python
 # Extract content from the file and get the markdown output along with processing time
-markdown, total_time = ap.extract(file_path="./data/test.pdf")
+markdown, total_time = ap.parse(file_path="./data/test.pdf")
 ```
 
 ### 4. Run Asynchronous Extraction
 For asynchronous extraction, send the file for processing and fetch results later:
 ```python
 # Send the file to begin asynchronous extraction
-file_id = ap.async_extract(file_path="./data/test.pdf")
+file_id = ap.async_parse(file_path="./data/test.pdf")
 
 # Fetch the extracted content using the file ID
 markdown = ap.async_fetch(file_id=file_id)
