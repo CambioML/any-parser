@@ -45,9 +45,6 @@ def validate_parser_inputs(
         - is_valid: True if validation passes, False otherwise
         - error_message: "" if validation passes, error if validation fails
     """
-    print("file_content", file_content)
-    print("file_type", file_type)
-    print("file_path", file_path)
     # Check if at least one input method is provided
     if file_content is None and file_path is None:
         return False, ValidationError.MISSING_INPUTS.value

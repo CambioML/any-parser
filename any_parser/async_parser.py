@@ -1,9 +1,7 @@
 """Asynchronous parser implementation."""
 
-import base64
 import json
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import Dict, Optional
 
 import requests
@@ -18,26 +16,6 @@ class AsyncParser(BaseParser):
     def _setup_endpoints(self) -> None:
         self._async_upload_url = f"{self._base_url}/async/upload"
         self._async_fetch_url = f"{self._base_url}/async/fetch"
-
-    def _async_process_file(
-        self,
-        file_path: Optional[str],
-        file_content: Optional[str],
-        file_type: Optional[str],
-    ):
-        file_path, file_type, error = self._process_file(
-            file_path, file_content, file_type
-        )
-        if error:
-            return None, None, error
-
-        if not file_path:
-            temp_file = NamedTemporaryFile(delete=False, suffix=file_type)
-            file_path = temp_file.name
-            with open(file_path, "wb") as file:
-                file.write(base64.b64decode(file_content))  # type: ignore
-
-        return file_path, file_type, None
 
     def send_async_request(
         self,

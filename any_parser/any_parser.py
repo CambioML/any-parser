@@ -250,7 +250,6 @@ class AnyParser:
                 file_content=file_content,
                 file_type=file_type,
             )
-            print("is_valid", is_valid)
 
             if not is_valid:
                 return error_message
@@ -260,7 +259,10 @@ class AnyParser:
             if file_path:
                 file_type = Path(file_path).suffix.lower().lstrip(".")
             else:
-                file_path = NamedTemporaryFile(delete=False, suffix=file_type).name
+                file_path = NamedTemporaryFile(
+                    delete=False, suffix=f".{file_type}"
+                ).name
+                print(file_path)
                 with open(file_path, "wb") as file:
                     file.write(base64.b64decode(file_content))  # type: ignore
 
@@ -271,55 +273,85 @@ class AnyParser:
 
     # Example of decorated methods:
     @handle_async_parsing
-    def async_parse(self, file_path, extract_args=None):
+    def async_parse(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_args=None,
+    ):
         """Extract full content from a file asynchronously."""
         return self._async_parser.send_async_request(
-            ProcessType.PARSE, file_path, extract_args
+            process_type=ProcessType.PARSE,
+            file_path=file_path,  # type: ignore
+            extract_args=extract_args,
         )
 
     @handle_async_parsing
-    def async_parse_with_layout(self, file_path):
+    def async_parse_with_layout(
+        self, file_path=None, file_content=None, file_type=None
+    ):
         """Extract content from a file asynchronously with layout analysis."""
         return self._async_parser.send_async_request(
-            ProcessType.PARSE_WITH_LAYOUT, file_path
+            process_type=ProcessType.PARSE_WITH_LAYOUT,
+            file_path=file_path,  # type: ignore
         )
 
     @handle_async_parsing
-    def async_parse_with_ocr(self, file_path):
+    def async_parse_with_ocr(self, file_path=None, file_content=None, file_type=None):
         """Extract full content from a file asynchronously with OCR."""
         return self._async_parser.send_async_request(
-            ProcessType.PARSE_WITH_OCR, file_path
+            process_type=ProcessType.PARSE_WITH_OCR,
+            file_path=file_path,  # type: ignore
         )
 
     @handle_async_parsing
-    def async_extract_pii(self, file_path, extract_args=None):
+    def async_extract_pii(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_args=None,
+    ):
         """Extract PII from a file asynchronously."""
         return self._async_parser.send_async_request(
-            ProcessType.EXTRACT_PII, file_path, extract_args
+            process_type=ProcessType.EXTRACT_PII,
+            file_path=file_path,  # type: ignore
+            extract_args=extract_args,
         )
 
     @handle_async_parsing
-    def async_extract_tables(self, file_path):
+    def async_extract_tables(self, file_path=None, file_content=None, file_type=None):
         """Extract tables from a file asynchronously."""
         return self._async_parser.send_async_request(
-            ProcessType.EXTRACT_TABLES, file_path
+            process_type=ProcessType.EXTRACT_TABLES,
+            file_path=file_path,  # type: ignore
         )
 
     @handle_async_parsing
-    def async_extract_key_value(self, file_path, extract_instruction=None):
+    def async_extract_key_value(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_instruction=None,
+    ):
         """Extract key-value pairs from a file asynchronously."""
-        print("reached async extract key value")
         return self._async_parser.send_async_request(
-            ProcessType.EXTRACT_KEY_VALUE,
-            file_path,
+            process_type=ProcessType.EXTRACT_KEY_VALUE,
+            file_path=file_path,  # type: ignore
             extract_args={"extract_instruction": extract_instruction},
         )
 
     @handle_async_parsing
-    def async_extract_resume_key_value(self, file_path):
+    def async_extract_resume_key_value(
+        self, file_path=None, file_content=None, file_type=None
+    ):
         """Extract resume key-value pairs from a file asynchronously."""
         return self._async_parser.send_async_request(
-            ProcessType.EXTRACT_RESUME_KEY_VALUE, file_path, extract_args=None
+            process_type=ProcessType.EXTRACT_RESUME_KEY_VALUE,
+            file_path=file_path,  # type: ignore
+            extract_args=None,
         )
 
     def async_fetch(

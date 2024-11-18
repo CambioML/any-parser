@@ -75,7 +75,7 @@ class TestAnyParser(unittest.TestCase):
         # extract
         markdown, elapsed_time = self.ap.parse(
             file_content=file_content, file_type=file_type
-        )  # pylint: disable=too-many-arguments
+        )
 
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
@@ -93,6 +93,28 @@ class TestAnyParser(unittest.TestCase):
 
         # extract
         file_id = self.ap.async_parse(file_path=working_file)
+        self.assertFalse(file_id.startswith("Error:"), file_id)
+        # fetch
+        markdown = self.ap.async_fetch(file_id=file_id)
+        self.assertFalse(markdown.startswith("Error:"), markdown)
+        correct_output = get_ground_truth(correct_output_file)
+        percentage = compare_markdown(markdown, correct_output)
+
+        self.assertGreaterEqual(
+            percentage, 90, f"Output similarity too low: {percentage:.2f}%"
+        )
+
+    def test_pdf_async_parse_and_fetch_with_file_content(self):
+        """Asynchronous PDF Parse and Fetch with file content"""
+        working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
+        correct_output_file = "./tests/outputs/correct_pdf_output.txt"
+
+        with open(working_file, "rb") as file:
+            file_content = base64.b64encode(file.read()).decode("utf-8")
+            file_type = Path(working_file).suffix.lower().lstrip(".")
+
+        # extract
+        file_id = self.ap.async_parse(file_content=file_content, file_type=file_type)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown = self.ap.async_fetch(file_id=file_id)
