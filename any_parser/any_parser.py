@@ -80,7 +80,7 @@ class AnyParser:
     @handle_parsing
     def parse(
         self,
-        file_path,
+        file_path=None,
         file_content=None,
         file_type=None,
         extract_args=None,
