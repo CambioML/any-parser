@@ -17,6 +17,87 @@ PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
 
 
+def handle_parsing(func):
+    """Decorator to handle common file processing logic."""
+
+    def wrapper(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        *args,
+        **kwargs,
+    ):
+        # pylint: disable=too-many-arguments
+        # Validate inputs
+        is_valid, error_message = validate_parser_inputs(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
+        )
+
+        if not is_valid:
+            return error_message, ""
+
+        # Encode the file content in base64 if file_path is provided
+        if file_content is None:
+            assert file_path is not None  # Type narrowing for mypy
+            try:
+                with open(file_path, "rb") as file:
+                    file_content = base64.b64encode(file.read()).decode("utf-8")
+                    file_type = Path(file_path).suffix.lower().lstrip(".")
+            except Exception as e:
+                return f"Error: {e}", ""
+
+        return func(
+            self,
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
+            *args,
+            **kwargs,
+        )
+
+    return wrapper
+
+
+def handle_async_parsing(func):
+    """Decorator to handle common async file processing logic."""
+
+    def wrapper(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        *args,
+        **kwargs,
+    ):
+        # Validate inputs
+        is_valid, error_message = validate_parser_inputs(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
+        )
+
+        if not is_valid:
+            return error_message
+
+        # Dump the file content into a NamedTemporaryFile if file_path
+        # is not provided
+        if file_path:
+            file_type = Path(file_path).suffix.lower().lstrip(".")
+        else:
+            file_path = NamedTemporaryFile(delete=False, suffix=f".{file_type}").name
+            print(file_path)
+            with open(file_path, "wb") as file:
+                file.write(base64.b64decode(file_content))  # type: ignore
+
+        # Call the actual function with processed arguments
+        return func(self, file_path=file_path, *args, **kwargs)
+
+    return wrapper
+
+
 class AnyParser:
     """AnyParser RT: Real-time parser for any data format."""
 
@@ -32,50 +113,6 @@ class AnyParser:
         """
         self._sync_parser = SyncParser(api_key, base_url)
         self._async_parser = AsyncParser(api_key, base_url)
-
-    @staticmethod
-    def handle_parsing(func):
-        """Decorator to handle common file processing logic."""
-
-        def wrapper(
-            self,
-            file_path=None,
-            file_content=None,
-            file_type=None,
-            *args,
-            **kwargs,
-        ):
-            # pylint: disable=too-many-arguments
-            # Validate inputs
-            is_valid, error_message = validate_parser_inputs(
-                file_path=file_path,
-                file_content=file_content,
-                file_type=file_type,
-            )
-
-            if not is_valid:
-                return error_message, ""
-
-            # Encode the file content in base64 if file_path is provided
-            if file_content is None:
-                assert file_path is not None  # Type narrowing for mypy
-                try:
-                    with open(file_path, "rb") as file:
-                        file_content = base64.b64encode(file.read()).decode("utf-8")
-                        file_type = Path(file_path).suffix.lower().lstrip(".")
-                except Exception as e:
-                    return f"Error: {e}", ""
-
-            return func(
-                self,
-                file_path=file_path,
-                file_content=file_content,
-                file_type=file_type,
-                *args,
-                **kwargs,
-            )
-
-        return wrapper
 
     @handle_parsing
     def parse(
@@ -231,45 +268,6 @@ class AnyParser:
             return result, f"Time Elapsed: {info}"
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
-
-    @staticmethod
-    def handle_async_parsing(func):
-        """Decorator to handle common async file processing logic."""
-
-        def wrapper(
-            self,
-            file_path=None,
-            file_content=None,
-            file_type=None,
-            *args,
-            **kwargs,
-        ):
-            # Validate inputs
-            is_valid, error_message = validate_parser_inputs(
-                file_path=file_path,
-                file_content=file_content,
-                file_type=file_type,
-            )
-
-            if not is_valid:
-                return error_message
-
-            # Dump the file content into a NamedTemporaryFile if file_path
-            # is not provided
-            if file_path:
-                file_type = Path(file_path).suffix.lower().lstrip(".")
-            else:
-                file_path = NamedTemporaryFile(
-                    delete=False, suffix=f".{file_type}"
-                ).name
-                print(file_path)
-                with open(file_path, "wb") as file:
-                    file.write(base64.b64decode(file_content))  # type: ignore
-
-            # Call the actual function with processed arguments
-            return func(self, file_path=file_path, *args, **kwargs)
-
-        return wrapper
 
     # Example of decorated methods:
     @handle_async_parsing
