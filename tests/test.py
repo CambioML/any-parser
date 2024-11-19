@@ -52,7 +52,8 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown = "\n".join(markdown_list)
 
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
@@ -73,9 +74,10 @@ class TestAnyParser(unittest.TestCase):
             file_type = Path(working_file).suffix.lower().lstrip(".")
 
         # extract
-        markdown, elapsed_time = self.ap.parse(
+        markdown_list, elapsed_time = self.ap.parse(
             file_content=file_content, file_type=file_type
         )
+        markdown = "\n".join(markdown_list)
 
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
@@ -95,7 +97,8 @@ class TestAnyParser(unittest.TestCase):
         file_id = self.ap.async_parse(file_path=working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
-        markdown = self.ap.async_fetch(file_id=file_id)
+        markdown_list = self.ap.async_fetch(file_id=file_id)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -117,7 +120,8 @@ class TestAnyParser(unittest.TestCase):
         file_id = self.ap.async_parse(file_content=file_content, file_type=file_type)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
-        markdown = self.ap.async_fetch(file_id=file_id)
+        markdown_list = self.ap.async_fetch(file_id=file_id)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -132,7 +136,8 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_docx_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -151,7 +156,8 @@ class TestAnyParser(unittest.TestCase):
         file_id = self.ap.async_parse(file_path=working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
-        markdown = self.ap.async_fetch(file_id=file_id)
+        markdown_list = self.ap.async_fetch(file_id=file_id)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -166,7 +172,8 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_pptx_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -185,7 +192,8 @@ class TestAnyParser(unittest.TestCase):
         file_id = self.ap.async_parse(file_path=working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
-        markdown = self.ap.async_fetch(file_id=file_id)
+        markdown_list = self.ap.async_fetch(file_id=file_id)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -200,7 +208,8 @@ class TestAnyParser(unittest.TestCase):
         correct_output_file = "./tests/outputs/correct_png_output.txt"
 
         # extract
-        markdown, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -219,7 +228,8 @@ class TestAnyParser(unittest.TestCase):
         file_id = self.ap.async_parse(file_path=working_file)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
-        markdown = self.ap.async_fetch(file_id=file_id)
+        markdown_list = self.ap.async_fetch(file_id=file_id)
+        markdown = "\n".join(markdown_list)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)

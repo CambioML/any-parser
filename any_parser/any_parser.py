@@ -153,9 +153,7 @@ class AnyParser:
 
         try:
             response_data = response.json()
-            result = "\n".join(
-                response_data["markdown"]
-            )  # Using direct extraction instead of extract_key
+            result = response_data["markdown"]
             return result, f"Time Elapsed: {info}"
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
@@ -213,7 +211,7 @@ class AnyParser:
 
         try:
             response_data = response.json()
-            result = "\n".join(response_data["markdown"])
+            result = response_data["markdown"]
             return result, f"Time Elapsed: {info}"
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
@@ -438,8 +436,7 @@ class AnyParser:
             elif "pii_extraction" in result:
                 return result["pii_extraction"]
             elif "markdown" in result:
-                markdown_list = result["markdown"]
-                return "\n".join(markdown_list)
+                return result["markdown"]
             return f"Error: Invalid response format\n {result}"
         if response.status_code == 202:
             return ""
