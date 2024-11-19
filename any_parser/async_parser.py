@@ -6,7 +6,8 @@ from typing import Dict, Optional
 
 import requests
 
-from any_parser.base_parser import BaseParser, ProcessType
+from any_parser.base_parser import BaseParser
+from any_parser.constants import ProcessType
 from any_parser.utils import upload_file_to_presigned_url
 
 TIMEOUT = 60
@@ -21,14 +22,15 @@ class AsyncParser(BaseParser):
         self,
         process_type: ProcessType,
         file_path: str,
+        file_content: str,
         extract_args: Optional[Dict] = None,
     ) -> str:
         """Extract full content from a file asynchronously.
 
         Args:
-            url_endpoint (str): The URL endpoint for the API.
-            file_path (str): The path to the file to be parsed.
             process_type (ProcessType): The type of processing to be done.
+            file_path (str): The path to the file to be parsed.
+            file_content (str): The content of the file to be parsed.
             extract_args (Optional[Dict]): Additional extraction arguments.
 
         Returns:
@@ -55,4 +57,4 @@ class AsyncParser(BaseParser):
         )
 
         # If response successful, upload the file
-        return upload_file_to_presigned_url(file_path, response)
+        return upload_file_to_presigned_url(file_content, response)

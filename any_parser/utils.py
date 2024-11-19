@@ -1,3 +1,5 @@
+import base64
+import io
 import json
 from enum import Enum
 from pathlib import Path
@@ -28,12 +30,12 @@ class ValidationError(Enum):
     OTHER = "{}"
 
 
-def validate_parser_inputs(
+def validate_file_inputs(
     file_path: Optional[str],
     file_content: Optional[str],
     file_type: Optional[str],
 ) -> Tuple[bool, str]:
-    """Validate inputs for the parser.
+    """Validate inputs for the parser or extractor.
 
     Args:
         file_content (Optional[str]): Base64 encoded file content
@@ -80,22 +82,27 @@ def validate_parser_inputs(
 
 
 def upload_file_to_presigned_url(
-    file_path: str, response: requests.Response, timeout: int = 10
+    file_content: str, response: requests.Response, timeout: int = 10
 ) -> str:
     if response.status_code == 200:
         try:
             file_id = response.json().get("fileId")
             presigned_url = response.json().get("presignedUrl")
-            with open(file_path, "rb") as file_to_upload:
-                files = {"file": (file_path, file_to_upload)}
-                upload_resp = requests.post(
-                    presigned_url["url"],
-                    data=presigned_url["fields"],
-                    files=files,
-                    timeout=timeout,
-                )
-                if upload_resp.status_code != 204:
-                    return f"Error: {upload_resp.status_code} {upload_resp.text}"
+
+            # Decode base64 content
+            decoded_content = base64.b64decode(file_content)
+
+            # Create file-like object from decoded content
+            files = {"file": ("file", io.BytesIO(decoded_content))}
+
+            upload_resp = requests.post(
+                presigned_url["url"],
+                data=presigned_url["fields"],
+                files=files,
+                timeout=timeout,
+            )
+            if upload_resp.status_code != 204:
+                return f"Error: {upload_resp.status_code} {upload_resp.text}"
             return file_id
         except json.JSONDecodeError:
             return "Error: Invalid JSON response"

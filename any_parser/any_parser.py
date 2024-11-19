@@ -3,22 +3,64 @@
 import base64
 import json
 import time
+import uuid
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 import requests
 
 from any_parser.async_parser import AsyncParser
-from any_parser.base_parser import ProcessType
+from any_parser.constants import ProcessType
 from any_parser.sync_parser import SyncParser
-from any_parser.utils import validate_parser_inputs
+from any_parser.utils import validate_file_inputs
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
 TIMEOUT = 60
 
 
-def handle_parsing(func):
-    """Decorator to handle common file processing logic."""
+def handle_file_processing(func):
+    """
+    Decorator to handle common file processing logic for parsing
+    and extraction operations.
+
+    This decorator manages file input validation and processing, supporting
+    either direct file content or file path inputs. It performs base64 encoding
+    of file contents when a file path is provided.
+
+    Args:
+        func: The decorated function that performs the actual parsing or
+        extraction.
+
+    Parameters for decorated functions:
+        file_path (str, optional): Path to the file to be processed. If
+            provided, the file will be read and encoded in base64.
+        file_content (str, optional): Base64-encoded content of the file. If
+            provided, file_path will be ignored.
+        file_type (str, optional): The file extension/type (e.g., 'pdf').
+            If not provided and file_path is given, it will be inferred from
+            the file extension.
+        *args, **kwargs: Additional arguments passed to the decorated function.
+
+    Returns:
+        tuple: A tuple containing (error_message, result), where:
+            - error_message (str): Error message if processing fails, empty
+                string on success
+            - result (str): Empty string if error occurs, otherwise the
+                processed result from func
+
+    Usage:
+        @handle_file_processing
+        def parse(self, file_path=None, file_content=None, file_type=None):
+            # Implementation
+            pass
+
+    Note:
+        Either file_path or file_content must be provided, but not both.
+        If file_path is provided, the file content will be read and encoded in
+        base64, and file_type will be inferred from the file extension.
+        If file_content is provided, file_type will be validated, and a
+        temporary file path will be generated for generating presigned url(for
+        async parsing and extraction)
+    """
 
     def wrapper(
         self,
@@ -30,7 +72,7 @@ def handle_parsing(func):
     ):
         # pylint: disable=too-many-arguments
         # Validate inputs
-        is_valid, error_message = validate_parser_inputs(
+        is_valid, error_message = validate_file_inputs(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
@@ -40,14 +82,16 @@ def handle_parsing(func):
             return error_message, ""
 
         # Encode the file content in base64 if file_path is provided
-        if file_content is None:
-            assert file_path is not None  # Type narrowing for mypy
+        if file_path:
             try:
                 with open(file_path, "rb") as file:
                     file_content = base64.b64encode(file.read()).decode("utf-8")
                     file_type = Path(file_path).suffix.lower().lstrip(".")
             except Exception as e:
                 return f"Error: {e}", ""
+        else:
+            # generate a random file path for genrating presigned url
+            file_path = f"/tmp/{uuid.uuid4()}.{file_type}"
 
         return func(
             self,
@@ -61,60 +105,24 @@ def handle_parsing(func):
     return wrapper
 
 
-def handle_async_parsing(func):
-    """Decorator to handle common async file processing logic."""
-
-    def wrapper(
-        self,
-        file_path=None,
-        file_content=None,
-        file_type=None,
-        *args,
-        **kwargs,
-    ):
-        # Validate inputs
-        is_valid, error_message = validate_parser_inputs(
-            file_path=file_path,
-            file_content=file_content,
-            file_type=file_type,
-        )
-
-        if not is_valid:
-            return error_message
-
-        # Dump the file content into a NamedTemporaryFile if file_path
-        # is not provided
-        if file_path:
-            file_type = Path(file_path).suffix.lower().lstrip(".")
-        else:
-            file_path = NamedTemporaryFile(delete=False, suffix=f".{file_type}").name
-            print(file_path)
-            with open(file_path, "wb") as file:
-                file.write(base64.b64decode(file_content))  # type: ignore
-
-        # Call the actual function with processed arguments
-        return func(self, file_path=file_path, *args, **kwargs)
-
-    return wrapper
-
-
 class AnyParser:
-    """AnyParser RT: Real-time parser for any data format."""
+    """Real-time parser for processing various data formats.
+
+    Provides both synchronous and asynchronous methods for parsing and
+    extracting information from different types of files.
+    """
 
     def __init__(self, api_key: str, base_url: str = PUBLIC_SHARED_BASE_URL) -> None:
-        """Initialize the AnyParser RT object.
+        """Initialize AnyParser with API credentials.
 
         Args:
-            api_key (str): The API key for the AnyParser
-            url (str): The URL of the AnyParser RT API.
-
-        Returns:
-            None
+            api_key: Authentication key for API access
+            base_url: API endpoint URL, defaults to public endpoint
         """
         self._sync_parser = SyncParser(api_key, base_url)
         self._async_parser = AsyncParser(api_key, base_url)
 
-    @handle_parsing
+    @handle_file_processing
     def parse(
         self,
         file_path=None,
@@ -122,7 +130,17 @@ class AnyParser:
         file_type=None,
         extract_args=None,
     ):
-        """Extract full content from a file in real-time."""
+        """Extract full content from a file synchronously.
+
+        Args:
+            file_path: Path to input file
+            file_content: Base64 encoded file content
+            file_type: File format extension
+            extract_args: Additional extraction parameters
+
+        Returns:
+            tuple: (result, timing_info) or (error_message, "")
+        """
         response, info = self._sync_parser.get_sync_response(
             self._sync_parser._sync_parse_url,
             file_content=file_content,  # type: ignore
@@ -142,14 +160,16 @@ class AnyParser:
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
 
-    @handle_parsing
+    @handle_file_processing
     def extract_pii(
         self,
         file_path=None,
         file_content=None,
         file_type=None,
     ):
-        """Extract PII from a file in real-time."""
+        """
+        Extract PII data from a file synchronously.
+        """
         response, info = self._sync_parser.get_sync_response(
             self._sync_parser._sync_extract_pii,
             file_content=file_content,  # type: ignore
@@ -167,7 +187,7 @@ class AnyParser:
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
 
-    @handle_parsing
+    @handle_file_processing
     def extract_tables(
         self,
         file_path=None,
@@ -198,7 +218,7 @@ class AnyParser:
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
 
-    @handle_parsing
+    @handle_file_processing
     def extract_key_value(
         self,
         file_path=None,
@@ -232,7 +252,7 @@ class AnyParser:
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
 
-    @handle_parsing
+    @handle_file_processing
     def extract_resume_key_value(
         self, file_path=None, file_content=None, file_type=None
     ):
@@ -270,7 +290,7 @@ class AnyParser:
             return f"Error: Invalid JSON response: {response.text}", ""
 
     # Example of decorated methods:
-    @handle_async_parsing
+    @handle_file_processing
     def async_parse(
         self,
         file_path=None,
@@ -282,10 +302,11 @@ class AnyParser:
         return self._async_parser.send_async_request(
             process_type=ProcessType.PARSE,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
             extract_args=extract_args,
         )
 
-    @handle_async_parsing
+    @handle_file_processing
     def async_parse_with_layout(
         self, file_path=None, file_content=None, file_type=None
     ):
@@ -293,17 +314,19 @@ class AnyParser:
         return self._async_parser.send_async_request(
             process_type=ProcessType.PARSE_WITH_LAYOUT,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
         )
 
-    @handle_async_parsing
+    @handle_file_processing
     def async_parse_with_ocr(self, file_path=None, file_content=None, file_type=None):
         """Extract full content from a file asynchronously with OCR."""
         return self._async_parser.send_async_request(
             process_type=ProcessType.PARSE_WITH_OCR,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
         )
 
-    @handle_async_parsing
+    @handle_file_processing
     def async_extract_pii(
         self,
         file_path=None,
@@ -315,18 +338,20 @@ class AnyParser:
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_PII,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
             extract_args=extract_args,
         )
 
-    @handle_async_parsing
+    @handle_file_processing
     def async_extract_tables(self, file_path=None, file_content=None, file_type=None):
         """Extract tables from a file asynchronously."""
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_TABLES,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
         )
 
-    @handle_async_parsing
+    @handle_file_processing
     def async_extract_key_value(
         self,
         file_path=None,
@@ -338,10 +363,11 @@ class AnyParser:
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_KEY_VALUE,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
             extract_args={"extract_instruction": extract_instruction},
         )
 
-    @handle_async_parsing
+    @handle_file_processing
     def async_extract_resume_key_value(
         self, file_path=None, file_content=None, file_type=None
     ):
@@ -349,6 +375,7 @@ class AnyParser:
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_RESUME_KEY_VALUE,
             file_path=file_path,  # type: ignore
+            file_content=file_content,  # type: ignore
             extract_args=None,
         )
 
