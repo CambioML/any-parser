@@ -9,8 +9,3 @@ class BaseParser:
             "Content-Type": "application/json",
             "x-api-key": self._api_key,
         }
-        self._setup_endpoints()
-
-    def _setup_endpoints(self) -> None:
-        """Setup API endpoints - to be implemented by child classes."""
-        raise NotImplementedError
