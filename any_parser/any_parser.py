@@ -10,7 +10,13 @@ import requests
 
 from any_parser.async_parser import AsyncParser
 from any_parser.constants import ProcessType
-from any_parser.sync_parser import SyncParser
+from any_parser.sync_parser import (
+    ExtractKeyValueSyncParser,
+    ExtractPIISyncParser,
+    ExtractResumeKeyValueSyncParser,
+    ExtractTablesSyncParser,
+    ParseSyncParser,
+)
 from any_parser.utils import validate_file_inputs
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
@@ -119,8 +125,14 @@ class AnyParser:
             api_key: Authentication key for API access
             base_url: API endpoint URL, defaults to public endpoint
         """
-        self._sync_parser = SyncParser(api_key, base_url)
         self._async_parser = AsyncParser(api_key, base_url)
+        self._sync_parse = ParseSyncParser(api_key, base_url)
+        self._sync_extract_key_value = ExtractKeyValueSyncParser(api_key, base_url)
+        self._sync_extract_resume_key_value = ExtractResumeKeyValueSyncParser(
+            api_key, base_url
+        )
+        self._sync_extract_pii = ExtractPIISyncParser(api_key, base_url)
+        self._sync_extract_tables = ExtractTablesSyncParser(api_key, base_url)
 
     @handle_file_processing
     def parse(
@@ -141,22 +153,12 @@ class AnyParser:
         Returns:
             tuple: (result, timing_info) or (error_message, "")
         """
-        response, info = self._sync_parser.get_sync_response(
-            self._sync_parser._sync_parse_url,
-            file_content=file_content,  # type: ignore
-            file_type=file_type,  # type: ignore
+        return self._sync_parse.parse(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
             extract_args=extract_args,
         )
-
-        if response is None:
-            return info, ""
-
-        try:
-            response_data = response.json()
-            result = response_data["markdown"]
-            return result, f"Time Elapsed: {info}"
-        except json.JSONDecodeError:
-            return f"Error: Invalid JSON response: {response.text}", ""
 
     @handle_file_processing
     def extract_pii(
@@ -168,22 +170,11 @@ class AnyParser:
         """
         Extract PII data from a file synchronously.
         """
-        response, info = self._sync_parser.get_sync_response(
-            self._sync_parser._sync_extract_pii,
-            file_content=file_content,  # type: ignore
-            file_type=file_type,  # type: ignore
-            extract_args=None,
+        return self._sync_extract_pii.extract(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
         )
-
-        if response is None:
-            return info, ""
-
-        try:
-            response_data = response.json()
-            result = response_data["pii_extraction"]
-            return result, f"Time Elapsed: {info}"
-        except json.JSONDecodeError:
-            return f"Error: Invalid JSON response: {response.text}", ""
 
     @handle_file_processing
     def extract_tables(
@@ -199,22 +190,11 @@ class AnyParser:
         Returns:
             tuple(str, str): The extracted data and the time taken.
         """
-        response, info = self._sync_parser.get_sync_response(
-            self._sync_parser._sync_extract_tables,
-            file_content=file_content,  # type: ignore
-            file_type=file_type,  # type: ignore
-            extract_args=None,
+        return self._sync_extract_tables.extract(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
         )
-
-        if response is None:
-            return info, ""
-
-        try:
-            response_data = response.json()
-            result = response_data["markdown"]
-            return result, f"Time Elapsed: {info}"
-        except json.JSONDecodeError:
-            return f"Error: Invalid JSON response: {response.text}", ""
 
     @handle_file_processing
     def extract_key_value(
@@ -233,22 +213,12 @@ class AnyParser:
         Returns:
             tuple(str, str): The extracted data and the time taken.
         """
-        response, info = self._sync_parser.get_sync_response(
-            self._sync_parser._sync_extract_key_value,
-            file_content=file_content,  # type: ignore
-            file_type=file_type,  # type: ignore
+        return self._sync_extract_key_value.extract(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
             extract_args={"extract_instruction": extract_instruction},
         )
-
-        if response is None:
-            return info, ""
-
-        try:
-            response_data = response.json()
-            result = response_data["json"]
-            return result, f"Time Elapsed: {info}"
-        except json.JSONDecodeError:
-            return f"Error: Invalid JSON response: {response.text}", ""
 
     @handle_file_processing
     def extract_resume_key_value(
@@ -270,22 +240,11 @@ class AnyParser:
                     - "pii": Personally Identifiable Information - includes
                         only name, email, and phone
         """
-        response, info = self._sync_parser.get_sync_response(
-            self._sync_parser._sync_extract_resume_key_value,
-            file_content=file_content,  # type: ignore
-            file_type=file_type,  # type: ignore
-            extract_args=None,
+        return self._sync_extract_resume_key_value.extract(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
         )
-
-        if response is None:
-            return info, ""
-
-        try:
-            response_data = response.json()
-            result = response_data["extraction_result"]
-            return result, f"Time Elapsed: {info}"
-        except json.JSONDecodeError:
-            return f"Error: Invalid JSON response: {response.text}", ""
 
     # Example of decorated methods:
     @handle_file_processing
@@ -425,19 +384,4 @@ class AnyParser:
                 timeout=TIMEOUT,
             )
 
-        if response is None:
-            return "Error: timeout, no response received"
-        if response.status_code == 200:
-            result = response.json()
-            if "json" in result:
-                return result["json"]
-            elif "resume_extraction" in result:
-                return result["resume_extraction"]
-            elif "pii_extraction" in result:
-                return result["pii_extraction"]
-            elif "markdown" in result:
-                return result["markdown"]
-            return f"Error: Invalid response format\n {result}"
-        if response.status_code == 202:
-            return ""
-        return f"Error: {response.status_code} {response.text}"
+        return self._async_parser.handle_async_response(response)
