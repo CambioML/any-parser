@@ -65,6 +65,19 @@ file_id = ap.async_parse(file_path="./data/test.pdf")
 markdown = ap.async_fetch(file_id=file_id)
 ```
 
+### 5. Run Batch Extraction (Beta)
+For batch extraction, send the file to begin processing and fetch results later:
+```python
+# Send the file to begin batch extraction
+response = ap.batches.create(file_path="./data/test.pdf")
+request_id = response.requestId
+
+# Fetch the extracted content using the request ID
+markdown = ap.batches.retrieve(request_id)
+```
+
+> ⚠️ **Note:** Batch extraction is currently in beta testing. Processing time may take up to 12 hours to complete.
+
 ## :scroll:  Examples
 Check out these examples to see how you can utilize **AnyParser** to extract text, numbers, and symbols in fewer than 10 lines of code!
 

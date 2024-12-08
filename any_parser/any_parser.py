@@ -9,6 +9,7 @@ from pathlib import Path
 import requests
 
 from any_parser.async_parser import AsyncParser
+from any_parser.batch_parser import BatchParser
 from any_parser.constants import ProcessType
 from any_parser.sync_parser import (
     ExtractKeyValueSyncParser,
@@ -20,6 +21,10 @@ from any_parser.sync_parser import (
 from any_parser.utils import validate_file_inputs
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
+# TODO: Update this to the correct batch endpoint
+PUBLIC_BATCH_BASE_URL = (
+    "http://AnyPar-ApiCo-cuKOBXasmUF1-1986145995.us-west-2.elb.amazonaws.com"
+)
 TIMEOUT = 60
 
 
@@ -133,6 +138,7 @@ class AnyParser:
         )
         self._sync_extract_pii = ExtractPIISyncParser(api_key, base_url)
         self._sync_extract_tables = ExtractTablesSyncParser(api_key, base_url)
+        self.batches = BatchParser(api_key, PUBLIC_BATCH_BASE_URL)
 
     @handle_file_processing
     def parse(
