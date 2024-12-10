@@ -21,10 +21,7 @@ from any_parser.sync_parser import (
 from any_parser.utils import validate_file_inputs
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
-# TODO: Update this to the correct batch endpoint
-PUBLIC_BATCH_BASE_URL = (
-    "http://AnyPar-ApiCo-cuKOBXasmUF1-1986145995.us-west-2.elb.amazonaws.com"
-)
+PUBLIC_BATCH_BASE_URL = "http://batch-api.cambio-ai.com"
 TIMEOUT = 60
 
 
@@ -123,7 +120,12 @@ class AnyParser:
     extracting information from different types of files.
     """
 
-    def __init__(self, api_key: str, base_url: str = PUBLIC_SHARED_BASE_URL) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str = PUBLIC_SHARED_BASE_URL,
+        batch_url: str = PUBLIC_BATCH_BASE_URL,
+    ) -> None:
         """Initialize AnyParser with API credentials.
 
         Args:
@@ -138,7 +140,7 @@ class AnyParser:
         )
         self._sync_extract_pii = ExtractPIISyncParser(api_key, base_url)
         self._sync_extract_tables = ExtractTablesSyncParser(api_key, base_url)
-        self.batches = BatchParser(api_key, PUBLIC_BATCH_BASE_URL)
+        self.batches = BatchParser(api_key, batch_url)
 
     @handle_file_processing
     def parse(
