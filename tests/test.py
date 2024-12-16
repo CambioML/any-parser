@@ -48,13 +48,12 @@ class TestAnyParser(unittest.TestCase):
 
     def test_pdf_sync_parse(self):
         """Synchronous PDF Parse"""
-        working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
+        working_file = "./examples/sample_data/resume_1.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         # extract
         markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
         markdown = "\n".join(markdown_list)
-
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
@@ -66,7 +65,7 @@ class TestAnyParser(unittest.TestCase):
 
     def test_pdf_sync_parse_with_file_content(self):
         """Synchronous PDF Parse with file content"""
-        working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
+        working_file = "./examples/sample_data/resume_1.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         with open(working_file, "rb") as file:
@@ -90,7 +89,7 @@ class TestAnyParser(unittest.TestCase):
 
     def test_pdf_async_parse_and_fetch(self):
         """Asynchronous PDF Parse and Fetch"""
-        working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
+        working_file = "./examples/sample_data/resume_1.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         # extract
@@ -109,7 +108,7 @@ class TestAnyParser(unittest.TestCase):
 
     def test_pdf_async_parse_and_fetch_with_file_content(self):
         """Asynchronous PDF Parse and Fetch with file content"""
-        working_file = "./examples/sample_data/stoxx_index_guide_0003.pdf"
+        working_file = "./examples/sample_data/resume_1.pdf"
         correct_output_file = "./tests/outputs/correct_pdf_output.txt"
 
         with open(working_file, "rb") as file:
@@ -117,7 +116,9 @@ class TestAnyParser(unittest.TestCase):
             file_type = Path(working_file).suffix.lower().lstrip(".")
 
         # extract
-        file_id = self.ap.async_parse(file_content=file_content, file_type=file_type)
+        file_id = self.ap.async_parse(
+            file_content=file_content, file_type=file_type
+        )
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown_list = self.ap.async_fetch(file_id=file_id)
