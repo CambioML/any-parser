@@ -116,9 +116,7 @@ class TestAnyParser(unittest.TestCase):
             file_type = Path(working_file).suffix.lower().lstrip(".")
 
         # extract
-        file_id = self.ap.async_parse(
-            file_content=file_content, file_type=file_type
-        )
+        file_id = self.ap.async_parse(file_content=file_content, file_type=file_type)
         self.assertFalse(file_id.startswith("Error:"), file_id)
         # fetch
         markdown_list = self.ap.async_fetch(file_id=file_id)

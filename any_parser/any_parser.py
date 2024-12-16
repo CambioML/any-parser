@@ -11,13 +11,10 @@ import requests
 from any_parser.async_parser import AsyncParser
 from any_parser.batch_parser import BatchParser
 from any_parser.constants import ProcessType
-from any_parser.sync_parser import (
-    ExtractKeyValueSyncParser,
-    ExtractPIISyncParser,
-    ExtractResumeKeyValueSyncParser,
-    ExtractTablesSyncParser,
-    ParseSyncParser,
-)
+from any_parser.sync_parser import (ExtractKeyValueSyncParser,
+                                    ExtractPIISyncParser,
+                                    ExtractResumeKeyValueSyncParser,
+                                    ExtractTablesSyncParser, ParseSyncParser)
 from any_parser.utils import validate_file_inputs
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
