@@ -1,5 +1,10 @@
 """Batch parser implementation."""
 
+import json
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import List, Optional
 
 import requests
@@ -8,6 +13,8 @@ from pydantic import BaseModel, Field
 from any_parser.base_parser import BaseParser
 
 TIMEOUT = 60
+MAX_FILES = 1000
+MAX_WORKERS = 10
 
 
 class UploadResponse(BaseModel):
@@ -43,14 +50,25 @@ class BatchParser(BaseParser):
         self._headers.pop("Content-Type")
 
     def create(self, file_path: str) -> UploadResponse:
-        """Upload a single file for batch processing.
+        """Upload a single file or folder for batch processing.
 
         Args:
-            file_path: Path to the file to upload
+            file_path: Path to the file or folder to upload
 
         Returns:
-            FileUploadResponse object containing upload details
+            If file: UploadResponse object containing upload details
+            If folder: Path to the JSONL file containing upload responses
         """
+        path = Path(file_path)
+        if path.is_file():
+            return self._upload_single_file(path)
+        elif path.is_dir():
+            return self._upload_folder(path)
+        else:
+            raise ValueError(f"Path {file_path} does not exist")
+
+    def _upload_single_file(self, file_path: Path) -> UploadResponse:
+        """Upload a single file for batch processing."""
         with open(file_path, "rb") as f:
             files = {"file": f}
             response = requests.post(
@@ -59,7 +77,6 @@ class BatchParser(BaseParser):
                 files=files,
                 timeout=TIMEOUT,
             )
-            print(response.json())
 
             if response.status_code != 200:
                 raise Exception(f"Upload failed: {response.text}")
@@ -70,6 +87,55 @@ class BatchParser(BaseParser):
                 requestId=data["requestId"],
                 requestStatus=data["requestStatus"],
             )
+
+    def _upload_folder(self, folder_path: Path) -> str:
+        """Upload all files in a folder for batch processing.
+
+        Args:
+            folder_path: Path to the folder containing files to upload
+
+        Returns:
+            Path to the JSONL file containing upload responses
+        """
+        # Get all files in folder and subfolders
+        files = []
+        for root, _, filenames in os.walk(folder_path):
+            for filename in filenames:
+                files.append(Path(root) / filename)
+
+        if len(files) > MAX_FILES:
+            raise ValueError(
+                f"Found {len(files)} files. Maximum allowed is {MAX_FILES}"
+            )
+
+        # Upload files concurrently using thread pool
+        responses = []
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            future_to_file = {
+                executor.submit(self._upload_single_file, file_path): file_path
+                for file_path in files
+            }
+
+            for future in as_completed(future_to_file):
+                file_path = future_to_file[future]
+                try:
+                    response = future.result()
+                    responses.append(response.dict())
+                except Exception as e:
+                    print(f"Failed to upload {file_path}: {str(e)}")
+
+        # Save responses to JSONL file in parallel folder
+        folder_name = folder_path.name
+        folder_size = len(files)
+        current_time = time.strftime("%Y%m%d%H%M%S")
+        output_filename = f"{folder_name}_{folder_size}_{current_time}.jsonl"
+        output_path = folder_path.parent / output_filename
+
+        with open(output_path, "w") as f:
+            for response in responses:
+                f.write(json.dumps(response) + "\n")
+
+        return str(output_path)
 
     def retrieve(self, request_id: str) -> FileStatusResponse:
         """Get the processing status of a file.
