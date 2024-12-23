@@ -1,6 +1,8 @@
 """Batch API Folder Processing Upload Example"""
 
+import json
 import os
+from datetime import datetime
 
 from dotenv import load_dotenv
 
@@ -17,6 +19,14 @@ ap = AnyParser(api_key)
 
 # Upload folder for batch processing
 WORKING_FOLDER = "./sample_data"
-response = ap.batches.create(WORKING_FOLDER)
+responses = ap.batches.create(WORKING_FOLDER)
 
-print(f"Upload response saved to: {response}")
+# Save responses to JSONL file with timestamp
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+output_file = f"./sample_data_{timestamp}.jsonl"
+
+with open(output_file, "w") as f:
+    for response in responses:
+        f.write(json.dumps(response.model_dump()) + "\n")
+
+print(f"Upload responses saved to: {output_file}")

@@ -1,11 +1,10 @@
 """Batch parser implementation."""
 
-import json
+import logging
 import os
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import requests
 from pydantic import BaseModel, Field
@@ -13,8 +12,9 @@ from pydantic import BaseModel, Field
 from any_parser.base_parser import BaseParser
 
 TIMEOUT = 60
-MAX_FILES = 1000
 MAX_WORKERS = 10
+
+logger = logging.getLogger(__name__)
 
 
 class UploadResponse(BaseModel):
@@ -49,15 +49,15 @@ class BatchParser(BaseParser):
         # remove "Content-Type" from headers
         self._headers.pop("Content-Type")
 
-    def create(self, file_path: str) -> UploadResponse:
+    def create(self, file_path: str) -> Union[UploadResponse, List[UploadResponse]]:
         """Upload a single file or folder for batch processing.
 
         Args:
             file_path: Path to the file or folder to upload
 
         Returns:
-            If file: UploadResponse object containing upload details
-            If folder: Path to the JSONL file containing upload responses
+            If file: Single UploadResponse object containing upload details
+            If folder: List of UploadResponse objects for each file
         """
         path = Path(file_path)
         if path.is_file():
@@ -88,25 +88,20 @@ class BatchParser(BaseParser):
                 requestStatus=data["requestStatus"],
             )
 
-    def _upload_folder(self, folder_path: Path) -> str:
+    def _upload_folder(self, folder_path: Path) -> List[UploadResponse]:
         """Upload all files in a folder for batch processing.
 
         Args:
             folder_path: Path to the folder containing files to upload
 
         Returns:
-            Path to the JSONL file containing upload responses
+            List of UploadResponse objects for each uploaded file
         """
         # Get all files in folder and subfolders
         files = []
         for root, _, filenames in os.walk(folder_path):
             for filename in filenames:
                 files.append(Path(root) / filename)
-
-        if len(files) > MAX_FILES:
-            raise ValueError(
-                f"Found {len(files)} files. Maximum allowed is {MAX_FILES}"
-            )
 
         # Upload files concurrently using thread pool
         responses = []
@@ -120,22 +115,11 @@ class BatchParser(BaseParser):
                 file_path = future_to_file[future]
                 try:
                     response = future.result()
-                    responses.append(response.dict())
+                    responses.append(response)
                 except Exception as e:
-                    print(f"Failed to upload {file_path}: {str(e)}")
+                    logger.error(f"Failed to upload {file_path}: {str(e)}")
 
-        # Save responses to JSONL file in parallel folder
-        folder_name = folder_path.name
-        folder_size = len(files)
-        current_time = time.strftime("%Y%m%d%H%M%S")
-        output_filename = f"{folder_name}_{folder_size}_{current_time}.jsonl"
-        output_path = folder_path.parent / output_filename
-
-        with open(output_path, "w") as f:
-            for response in responses:
-                f.write(json.dumps(response) + "\n")
-
-        return str(output_path)
+        return responses
 
     def retrieve(self, request_id: str) -> FileStatusResponse:
         """Get the processing status of a file.
