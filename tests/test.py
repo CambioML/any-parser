@@ -54,7 +54,6 @@ class TestAnyParser(unittest.TestCase):
         # extract
         markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
         markdown = "\n".join(markdown_list)
-        print(markdown)
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)
