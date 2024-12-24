@@ -3,14 +3,16 @@
 
 • Chart 1 example
 
+ 
 | Investor Metrics | FY23 Q1 | FY23 Q2 | FY23 Q3 | FY23 Q4 | FY24 Q1 |
-|-----------------|---------|---------|---------|---------|---------|
+|---|---|---|---|---|---|
 | Office Commercial products and cloud services revenue growth (y/y) | 7% / 13% | 7% / 14% | 13% / 17% | 12% / 14% | 15% / 14% |
 | Office Consumer products and cloud services revenue growth (y/y) | 7% / 11% | (2)% / 3% | 1% / 4% | 3% / 6% | 3% / 4% |
 | Office 365 Commercial seat growth (y/y) | 14% | 12% | 11% | 11% | 10% |
 | Microsoft 365 Consumer subscribers (in millions) | 65.1 | 67.7 | 70.8 | 74.9 | 76.7 |
 | Dynamics products and cloud services revenue growth (y/y) | 15% / 22% | 13% / 20% | 17% / 21% | 19% / 21% | 22% / 21% |
 | LinkedIn revenue growth (y/y) | 17% / 21% | 10% / 14% | 8% / 11% | 6% / 8% | 8% |
+ 
 
 Growth rates include non-GAAP CC growth (GAAP % / CC %).
-## Thanks
+Thanks
