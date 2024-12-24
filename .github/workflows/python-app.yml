@@ -46,6 +46,6 @@ jobs:
         isort . --profile=black --check-only --verbose
     - name: Test with unittest
       env:
-        CAMBIO_API_KEY: ${{ secrets.CAMBIO_API_KEY }}
+        CAMBIO_API_KEY: ${{ secrets.CAMBIO_API_KEY }}  # Set API key from repository secrets
       run: |
         poetry run python -m unittest discover -v tests
