@@ -17,7 +17,6 @@ load_dotenv(override=True)
 from any_parser import AnyParser  # noqa: E402
 
 
-# helper functions
 def get_ground_truth(file_path: str) -> str:
     """Get the ground truth from the file."""
     with open(file_path, "r", encoding="utf-8") as file:
