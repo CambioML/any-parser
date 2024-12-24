@@ -1,3 +1,4 @@
+# Workflow name that appears in GitHub Actions UI
 name: Python application
 
 on:
