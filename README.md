@@ -82,8 +82,16 @@ Batch API for folder input:
 WORKING_FOLDER = "./sample_data"
 # This will generate a jsonl with filename and requestID
 response = ap.batches.create(WORKING_FOLDER)
+```
 
-# Fetch the extracted content using the request ID
+Each response in the JSONL file contains:
+- The filename
+- A unique request ID
+- Additional processing metadata
+You can later use these request IDs to retrieve the extracted content for each file:
+
+```python
+# Fetch the extracted content using the request ID from the jsonl file
 markdown = ap.batches.retrieve(request_id)
 ```
 For more details about code implementation of batch API, refer to

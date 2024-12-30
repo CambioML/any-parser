@@ -1,12 +1,17 @@
 """Test batch API folder fetch response"""
 
 import json
+import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dotenv import load_dotenv
 
 from any_parser import AnyParser
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv(override=True)
@@ -36,7 +41,7 @@ def process_response(response):
             response["requestStatus"] = "COMPLETED"
             response["completionTime"] = markdown.completionTime
     except Exception as e:
-        print(f"Error processing {request_id}: {str(e)}")
+        logger.error(f"Error processing {request_id}: {str(e)}")
         response["error"] = [str(e)]
     return response
 
