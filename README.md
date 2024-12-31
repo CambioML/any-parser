@@ -76,6 +76,27 @@ request_id = response.requestId
 markdown = ap.batches.retrieve(request_id)
 ```
 
+Batch API for folder input:
+```python
+# Send the folder to begin batch extraction
+WORKING_FOLDER = "./sample_data"
+# This will generate a jsonl with filename and requestID
+response = ap.batches.create(WORKING_FOLDER)
+```
+
+Each response in the JSONL file contains:
+- The filename
+- A unique request ID
+- Additional processing metadata
+You can later use these request IDs to retrieve the extracted content for each file:
+
+```python
+# Fetch the extracted content using the request ID from the jsonl file
+markdown = ap.batches.retrieve(request_id)
+```
+For more details about code implementation of batch API, refer to
+[examples/parse_batch_upload.py](examples/parse_batch_upload.py)  and  [examples/parse_batch_fetch.py](examples/parse_batch_fetch.py) 
+
 > ⚠️ **Note:** Batch extraction is currently in beta testing. Processing time may take up to 12 hours to complete.
 > 
 > ⚠️ **Important:** API keys generated from cambioml.com do not automatically have batch processing permissions. Please contact info@cambioml.com to request batch processing access for your API key.
