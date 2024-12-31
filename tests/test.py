@@ -17,7 +17,6 @@ load_dotenv(override=True)
 from any_parser import AnyParser  # noqa: E402
 
 
-# helper functions
 def get_ground_truth(file_path: str) -> str:
     """Get the ground truth from the file."""
     with open(file_path, "r", encoding="utf-8") as file:
@@ -54,7 +53,6 @@ class TestAnyParser(unittest.TestCase):
         # extract
         markdown_list, elapsed_time = self.ap.parse(file_path=working_file)
         markdown = "\n".join(markdown_list)
-
         self.assertFalse(markdown.startswith("Error:"), markdown)
         correct_output = get_ground_truth(correct_output_file)
         percentage = compare_markdown(markdown, correct_output)

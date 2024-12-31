@@ -18,17 +18,29 @@ logger = logging.getLogger(__name__)
 
 
 class UploadResponse(BaseModel):
+    """
+    Response from the batch upload endpoint.
+    """
+
     fileName: str
     requestId: str
     requestStatus: str
 
 
 class UsageResponse(BaseModel):
+    """
+    Response from the batch usage endpoint.
+    """
+
     pageLimit: int
     pageRemaining: int
 
 
 class FileStatusResponse(BaseModel):
+    """
+    Response from the batch file status endpoint.
+    """
+
     fileName: str
     fileType: str
     requestId: str
@@ -69,6 +81,9 @@ class BatchParser(BaseParser):
 
     def _upload_single_file(self, file_path: Path) -> UploadResponse:
         """Upload a single file for batch processing."""
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"The file path '{file_path}' does not exist.")
+
         with open(file_path, "rb") as f:
             files = {"file": f}
             response = requests.post(

@@ -98,6 +98,8 @@ For more details about code implementation of batch API, refer to
 [examples/parse_batch_upload.py](examples/parse_batch_upload.py)  and  [examples/parse_batch_fetch.py](examples/parse_batch_fetch.py) 
 
 > ⚠️ **Note:** Batch extraction is currently in beta testing. Processing time may take up to 12 hours to complete.
+> 
+> ⚠️ **Important:** API keys generated from cambioml.com do not automatically have batch processing permissions. Please contact info@cambioml.com to request batch processing access for your API key.
 
 ## :scroll:  Examples
 Check out these examples to see how you can utilize **AnyParser** to extract text, numbers, and symbols in fewer than 10 lines of code!
