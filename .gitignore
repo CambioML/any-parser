@@ -168,3 +168,4 @@ cython_debug/
 # data/
 *.xlsx
 *.csv
+*.jsonl

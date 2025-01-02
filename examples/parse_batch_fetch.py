@@ -26,7 +26,7 @@ ap = AnyParser(api_key)
 
 # Read responses from JSONL file
 # Change to your real output json from parse_batch_upload.py
-response_file = "./sample_data_20241219190049.jsonl"
+response_file = "./sample_data_20250102103047.jsonl"
 with open(response_file, "r") as f:
     responses = [json.loads(line) for line in f]
 
@@ -36,7 +36,7 @@ def process_response(response):
     request_id = response["requestId"]
     try:
         markdown = ap.batches.retrieve(request_id)
-        if markdown:
+        if markdown:  # TODO: add status check here
             response["result"] = [markdown.result[0] if markdown.result else ""]
             response["requestStatus"] = "COMPLETED"
             response["completionTime"] = markdown.completionTime

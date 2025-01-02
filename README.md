@@ -88,6 +88,7 @@ Each response in the JSONL file contains:
 - The filename
 - A unique request ID
 - Additional processing metadata
+
 You can later use these request IDs to retrieve the extracted content for each file:
 
 ```python
