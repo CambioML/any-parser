@@ -36,7 +36,7 @@ def process_response(response):
     request_id = response["requestId"]
     try:
         markdown = ap.batches.retrieve(request_id)
-        if markdown:  # TODO: add status check here
+        if markdown and markdown.result:
             response["result"] = [markdown.result[0] if markdown.result else ""]
             response["requestStatus"] = "COMPLETED"
             response["completionTime"] = markdown.completionTime
