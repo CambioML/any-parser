@@ -134,7 +134,9 @@ class AnyParser:
         """
         self._async_parser = AsyncParser(api_key, base_url)
         self._sync_parse = ParseSyncParser(api_key, base_url)
-        self._sync_extract_key_value = ExtractKeyValueSyncParser(api_key, base_url)
+        self._sync_extract_key_value = ExtractKeyValueSyncParser(
+            api_key, base_url
+        )
         self._sync_extract_resume_key_value = ExtractResumeKeyValueSyncParser(
             api_key, base_url
         )
@@ -184,25 +186,58 @@ class AnyParser:
             file_type=file_type,
         )
 
+    @staticmethod
+    def flatten_to_string(lst):
+        result = []
+        for item in lst:
+            if isinstance(item, list):
+                result.append(AnyParser.flatten_to_string(item))
+            else:
+                result.append(str(item))
+        return "".join(result)
+
     @handle_file_processing
     def extract_tables(
         self,
         file_path=None,
         file_content=None,
         file_type=None,
+        return_type="html",
     ):
         """Extract tables from a file in real-time.
 
         Args:
             file_path (str): The path to the file to be parsed.
+            return_type (str): 'html' 或 'csv'，控制返回 HTML 或 CSV。
         Returns:
-            tuple(str, str): The extracted data and the time taken.
+            tuple(str, str): (提取结果, 耗时信息)
         """
-        return self._sync_extract_tables.extract(
+        extracted_html, time_elapsed = self._sync_extract_tables.extract(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
         )
+
+        if isinstance(extracted_html, list):
+            extracted_html = AnyParser.flatten_to_string(extracted_html)
+
+        if return_type.lower() == "csv":
+            try:
+                import pandas as pd
+            except ImportError:
+                raise ImportError(
+                    "Please install pandas to use CSV return_type"
+                )
+
+            df_list = pd.read_html(extracted_html)
+            csv_list = []
+            for df in df_list:
+                csv_list.append(df.to_csv(index=False))
+            csv_output = "\n\n".join(csv_list)
+
+            return csv_output, time_elapsed
+
+        return extracted_html, time_elapsed
 
     @handle_file_processing
     def extract_key_value(
@@ -283,7 +318,9 @@ class AnyParser:
         )
 
     @handle_file_processing
-    def async_parse_with_ocr(self, file_path=None, file_content=None, file_type=None):
+    def async_parse_with_ocr(
+        self, file_path=None, file_content=None, file_type=None
+    ):
         """Extract full content from a file asynchronously with OCR."""
         return self._async_parser.send_async_request(
             process_type=ProcessType.PARSE_WITH_OCR,
@@ -308,7 +345,9 @@ class AnyParser:
         )
 
     @handle_file_processing
-    def async_extract_tables(self, file_path=None, file_content=None, file_type=None):
+    def async_extract_tables(
+        self, file_path=None, file_content=None, file_type=None
+    ):
         """Extract tables from a file asynchronously."""
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_TABLES,
