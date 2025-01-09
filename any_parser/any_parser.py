@@ -208,9 +208,9 @@ class AnyParser:
 
         Args:
             file_path (str): The path to the file to be parsed.
-            return_type (str): 'html' 或 'csv'，控制返回 HTML 或 CSV。
+            return_type (str): 'html' or 'csv'
         Returns:
-            tuple(str, str): (提取结果, 耗时信息)
+            tuple(str, str)
         """
         extracted_html, time_elapsed = self._sync_extract_tables.extract(
             file_path=file_path,
