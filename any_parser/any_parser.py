@@ -4,6 +4,8 @@ import base64
 import json
 import time
 import uuid
+from collections.abc import Iterable
+from io import StringIO
 from pathlib import Path
 
 import requests
@@ -134,9 +136,7 @@ class AnyParser:
         """
         self._async_parser = AsyncParser(api_key, base_url)
         self._sync_parse = ParseSyncParser(api_key, base_url)
-        self._sync_extract_key_value = ExtractKeyValueSyncParser(
-            api_key, base_url
-        )
+        self._sync_extract_key_value = ExtractKeyValueSyncParser(api_key, base_url)
         self._sync_extract_resume_key_value = ExtractResumeKeyValueSyncParser(
             api_key, base_url
         )
@@ -187,14 +187,31 @@ class AnyParser:
         )
 
     @staticmethod
-    def flatten_to_string(lst):
-        result = []
-        for item in lst:
-            if isinstance(item, list):
-                result.append(AnyParser.flatten_to_string(item))
-            else:
-                result.append(str(item))
-        return "".join(result)
+    def flatten_to_string(item):
+        """
+        Flatten any iterable object to a string.
+        """
+
+        if isinstance(item, str):
+            return item
+
+        # if item is a dict, flatten all keys and values
+        if isinstance(item, dict):
+            parts = []
+            for k, v in item.items():
+                parts.append(AnyParser.flatten_to_string(k))
+                parts.append(AnyParser.flatten_to_string(v))
+            return "".join(parts)
+
+        # item is other iterable objects
+        if isinstance(item, Iterable):
+            parts = []
+            for sub_item in item:
+                parts.append(AnyParser.flatten_to_string(sub_item))
+            return "".join(parts)
+
+        # item is not iterable objects
+        return str(item)
 
     @handle_file_processing
     def extract_tables(
@@ -225,15 +242,14 @@ class AnyParser:
             try:
                 import pandas as pd
             except ImportError:
-                raise ImportError(
-                    "Please install pandas to use CSV return_type"
-                )
+                raise ImportError("Please install pandas to use CSV return_type")
 
-            df_list = pd.read_html(extracted_html)
-            csv_list = []
-            for df in df_list:
-                csv_list.append(df.to_csv(index=False))
-            csv_output = "\n\n".join(csv_list)
+            if isinstance(extracted_html, list):
+                extracted_html = "".join(str(item) for item in extracted_html)
+
+            df_list = pd.read_html(StringIO(extracted_html))
+            combined_df = pd.concat(df_list, ignore_index=True)
+            csv_output = combined_df.to_csv(index=False)
 
             return csv_output, time_elapsed
 
@@ -318,9 +334,7 @@ class AnyParser:
         )
 
     @handle_file_processing
-    def async_parse_with_ocr(
-        self, file_path=None, file_content=None, file_type=None
-    ):
+    def async_parse_with_ocr(self, file_path=None, file_content=None, file_type=None):
         """Extract full content from a file asynchronously with OCR."""
         return self._async_parser.send_async_request(
             process_type=ProcessType.PARSE_WITH_OCR,
@@ -345,9 +359,7 @@ class AnyParser:
         )
 
     @handle_file_processing
-    def async_extract_tables(
-        self, file_path=None, file_content=None, file_type=None
-    ):
+    def async_extract_tables(self, file_path=None, file_content=None, file_type=None):
         """Extract tables from a file asynchronously."""
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_TABLES,
