@@ -4,6 +4,8 @@ import base64
 import json
 import time
 import uuid
+from collections.abc import Iterable
+from io import StringIO
 from pathlib import Path
 
 import requests
@@ -184,25 +186,74 @@ class AnyParser:
             file_type=file_type,
         )
 
+    @staticmethod
+    def flatten_to_string(item):
+        """
+        Flatten any iterable object to a string.
+        """
+
+        if isinstance(item, str):
+            return item
+
+        # if item is a dict, flatten all keys and values
+        if isinstance(item, dict):
+            parts = []
+            for k, v in item.items():
+                parts.append(AnyParser.flatten_to_string(k))
+                parts.append(AnyParser.flatten_to_string(v))
+            return "".join(parts)
+
+        # item is other iterable objects
+        if isinstance(item, Iterable):
+            parts = []
+            for sub_item in item:
+                parts.append(AnyParser.flatten_to_string(sub_item))
+            return "".join(parts)
+
+        # item is not iterable objects
+        return str(item)
+
     @handle_file_processing
     def extract_tables(
         self,
         file_path=None,
         file_content=None,
         file_type=None,
+        return_type="html",
     ):
         """Extract tables from a file in real-time.
 
         Args:
             file_path (str): The path to the file to be parsed.
+            return_type (str): 'html' or 'csv'
         Returns:
-            tuple(str, str): The extracted data and the time taken.
+            tuple(str, str)
         """
-        return self._sync_extract_tables.extract(
+        extracted_html, time_elapsed = self._sync_extract_tables.extract(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
         )
+
+        if isinstance(extracted_html, list):
+            extracted_html = AnyParser.flatten_to_string(extracted_html)
+
+        if return_type.lower() == "csv":
+            try:
+                import pandas as pd
+            except ImportError:
+                raise ImportError("Please install pandas to use CSV return_type")
+
+            if isinstance(extracted_html, list):
+                extracted_html = "".join(str(item) for item in extracted_html)
+
+            df_list = pd.read_html(StringIO(extracted_html))
+            combined_df = pd.concat(df_list, ignore_index=True)
+            csv_output = combined_df.to_csv(index=False)
+
+            return csv_output, time_elapsed
+
+        return extracted_html, time_elapsed
 
     @handle_file_processing
     def extract_key_value(
