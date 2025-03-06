@@ -23,11 +23,20 @@ def get_ground_truth(file_path: str) -> str:
         return file.read()
 
 
+def _preprocess_markdown_text(text: str) -> str:
+    """Clean the markdown text."""
+    return text.replace("#", "").replace("\n", "")
+
+
 def compare_markdown(generated_output: str, correct_output: str) -> float:
     """
     Compare the generated markdown to the correct markdown using
     Levenshtein Distance.
     """
+    # Preprocess both outputs to clean markdown text
+    generated_output = _preprocess_markdown_text(generated_output)
+    correct_output = _preprocess_markdown_text(correct_output)
+
     distance = Levenshtein.distance(generated_output, correct_output)
 
     max_len = max(len(generated_output), len(correct_output))
