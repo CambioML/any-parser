@@ -22,8 +22,8 @@ from any_parser.sync_parser import (
 )
 from any_parser.utils import validate_file_inputs
 
-PUBLIC_SHARED_BASE_URL = "https://public-api.cambio-ai.com"
-PUBLIC_BATCH_BASE_URL = "http://batch-api.cambio-ai.com"
+PUBLIC_SHARED_BASE_URL = "https://public-api.cambioml.com"
+PUBLIC_BATCH_BASE_URL = "http://batch-api.cambioml.com"
 TIMEOUT = 60
 
 
