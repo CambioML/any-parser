@@ -24,7 +24,7 @@ from any_parser.utils import validate_file_inputs
 
 PUBLIC_SHARED_BASE_URL = "https://public-api.cambioml.com"
 PUBLIC_BATCH_BASE_URL = "http://batch-api.cambioml.com"
-TIMEOUT = 60
+TIMEOUT = 180
 
 
 def handle_file_processing(func):
@@ -399,7 +399,7 @@ class AnyParser:
         self,
         file_id: str,
         sync: bool = True,
-        sync_timeout: int = 60,
+        sync_timeout: int = 180,
         sync_interval: int = 5,
     ) -> str:
         """Fetches extraction results asynchronously.
@@ -409,7 +409,7 @@ class AnyParser:
             sync (bool, optional): Whether to wait for the results
                 synchronously.
             sync_timeout (int, optional): Maximum time to wait for results in
-                seconds. Defaults to 60.
+                seconds. Defaults to 180.
             sync_interval (int, optional): Time interval between polling
                 attempts in seconds. Defaults to 5.
 
