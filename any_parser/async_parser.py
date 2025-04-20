@@ -27,6 +27,8 @@ class ParsePostProcessor(BasePostProcessor):
     def process(self, json_response: Dict) -> str:
         if "markdown" in json_response:
             return json_response["markdown"]
+        if "result" in json_response:
+            return json_response["result"]
         return super().process(json_response)
 
 
