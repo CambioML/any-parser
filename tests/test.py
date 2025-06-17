@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import unittest
+import json
 from pathlib import Path
 
 import Levenshtein
@@ -276,6 +277,8 @@ class TestAnyParser(unittest.TestCase):
                 # fetch
                 key_value_result = self.ap.async_fetch(file_id=file_id)
                 # assertions
+                if isinstance(key_value_result, str):
+                    key_value_result = json.loads(key_value_result.replace("'", '"'))
                 self.assertEqual(key_value_result, data["correct_output"])
                 # wait 1 s between requests
                 time.sleep(1)
