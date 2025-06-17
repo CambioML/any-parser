@@ -36,39 +36,36 @@ class AsyncParser(BaseParser):
         Returns:
             str: The job_id of the submitted job.
         """
-        
+
         # Determine the endpoint based on process type
         endpoint_map = {
             ProcessType.PARSE: "/anyparser/async_parse",
-            ProcessType.PARSE_PRO: "/anyparser/async_parse_pro", 
+            ProcessType.PARSE_PRO: "/anyparser/async_parse_pro",
             ProcessType.PARSE_TEXTRACT: "/anyparser/async_parse_textract",
             ProcessType.EXTRACT_PII: "/anyparser/async_extract_pii",
             ProcessType.EXTRACT_TABLES: "/anyparser/async_extract_tables",
             ProcessType.EXTRACT_KEY_VALUE: "/anyparser/async_extract_key_value",
         }
-        
+
         endpoint = endpoint_map.get(process_type)
         if not endpoint:
             raise ValueError(f"Unsupported process type: {process_type}")
 
         # Get file type from file path
-        file_type = file_path.split('.')[-1] if '.' in file_path else ""
-        
+        file_type = file_path.split(".")[-1] if "." in file_path else ""
+
         # Create the payload
         payload = {
             "file_content": file_content,
             "file_type": file_type,
         }
-        
+
         if extract_args:
             if process_type == ProcessType.EXTRACT_KEY_VALUE:
-                input_keys = list(extract_args['extract_instruction'].keys())
-                input_descriptions = list(extract_args['extract_instruction'].values())
+                input_keys = list(extract_args["extract_instruction"].keys())
+                input_descriptions = list(extract_args["extract_instruction"].values())
                 extract_instruction = [
-                    {
-                        "key": key,
-                        "description": description
-                    }
+                    {"key": key, "description": description}
                     for key, description in zip(input_keys, input_descriptions)
                 ]
                 payload["extract_input_key_description_pairs"] = extract_instruction
@@ -93,10 +90,10 @@ class AsyncParser(BaseParser):
 
     def get_job_status(self, job_id: str) -> Dict:
         """Get the status of an async job.
-        
+
         Args:
             job_id (str): The ID of the job to check.
-            
+
         Returns:
             Dict: Job status information including status, result, and error if any.
         """
@@ -105,10 +102,10 @@ class AsyncParser(BaseParser):
             headers=self._headers,
             timeout=TIMEOUT,
         )
-        
+
         if response.status_code != 200:
             raise Exception(f"Error {response.status_code}: {response.text}")
-            
+
         return response.json()
 
     def handle_async_response(self, response) -> str:
@@ -120,7 +117,7 @@ class AsyncParser(BaseParser):
         if response.status_code == 200:
             try:
                 response_data = response.json()
-                
+
                 # Handle different response formats
                 if "markdown" in response_data:
                     return response_data["markdown"]
@@ -130,7 +127,7 @@ class AsyncParser(BaseParser):
                     return f"Error: {response_data['error']}"
                 else:
                     return str(response_data)
-                    
+
             except json.JSONDecodeError:
                 return f"Error: Invalid JSON response: {response.text}"
 

@@ -9,15 +9,13 @@ from pathlib import Path
 
 from any_parser.async_parser import AsyncParser
 from any_parser.batch_parser import BatchParser
-from any_parser.constants import ProcessType, PUBLIC_SHARED_BASE_URL, PUBLIC_BATCH_BASE_URL
-from any_parser.sync_parser import (
-    ExtractKeyValueSyncParser,
-    ExtractPIISyncParser,
-    ExtractTablesSyncParser,
-    ParseSyncParser,
-    ParseProSyncParser,
-    ParseTextractSyncParser,
-)
+from any_parser.constants import (PUBLIC_BATCH_BASE_URL,
+                                  PUBLIC_SHARED_BASE_URL, ProcessType)
+from any_parser.sync_parser import (ExtractKeyValueSyncParser,
+                                    ExtractPIISyncParser,
+                                    ExtractTablesSyncParser,
+                                    ParseProSyncParser, ParseSyncParser,
+                                    ParseTextractSyncParser)
 from any_parser.utils import validate_file_inputs
 
 
@@ -25,7 +23,7 @@ def handle_file_processing(func):
     """
     Decorator to handle file input validation and processing.
 
-    Supports both file path and base64 file content inputs. When a file path 
+    Supports both file path and base64 file content inputs. When a file path
     is provided, reads and base64-encodes the file content automatically.
 
     Args:
@@ -260,8 +258,8 @@ class AnyParser:
         )
 
         # Handle the new result format where tables are in a dict with 'markdown' key
-        if isinstance(extracted_result, dict) and 'markdown' in extracted_result:
-            extracted_html = extracted_result['markdown']
+        if isinstance(extracted_result, dict) and "markdown" in extracted_result:
+            extracted_html = extracted_result["markdown"]
         else:
             extracted_html = extracted_result
 
@@ -278,10 +276,10 @@ class AnyParser:
             # Ensure we have a string for pandas
             if isinstance(extracted_html, list):
                 extracted_html = "".join(str(item) for item in extracted_html)
-            
+
             # Wrap the HTML tables in a proper HTML structure for pandas
             html_content = f"<html><body>{extracted_html}</body></html>"
-            
+
             try:
                 df_list = pd.read_html(StringIO(html_content))
                 combined_df = pd.concat(df_list, ignore_index=True)
@@ -318,7 +316,7 @@ class AnyParser:
         """
         # Convert extract_instruction to the correct API format\
         if not file_type:
-            file_type = file_path.split('.')[-1] if '.' in file_path else ""
+            file_type = file_path.split(".")[-1] if "." in file_path else ""
         formatted_instruction = None
         if extract_instruction:
             if isinstance(extract_instruction, dict):
@@ -332,7 +330,7 @@ class AnyParser:
                 formatted_instruction = extract_instruction
             else:
                 raise ValueError("extract_instruction must be a dict or list")
-        
+
         return self._sync_extract_key_value.extract(
             file_path=file_path,
             file_content=file_content,
@@ -428,7 +426,7 @@ class AnyParser:
         extract_instruction=None,
     ):
         """Extract key-value pairs from a file asynchronously.
-        
+
         Args:
             file_path (str): The path to the file to be parsed.
             file_content (str): Base64 encoded file content.
@@ -436,12 +434,12 @@ class AnyParser:
             extract_instruction (Dict or List): A dictionary containing the keys to be
                 extracted, with their values as the description of those keys.
                 Or a list of dictionaries with 'key' and 'description' fields.
-        
+
         Returns:
             tuple: (job_id, timing_info) or (error_message, "")
         """
         if not file_type:
-            file_type = file_path.split('.')[-1] if '.' in file_path else ""
+            file_type = file_path.split(".")[-1] if "." in file_path else ""
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_KEY_VALUE,
             file_path=file_path,  # type: ignore
@@ -452,10 +450,10 @@ class AnyParser:
 
     def get_job_status(self, job_id: str):
         """Get the status of an async job.
-        
+
         Args:
             job_id (str): The ID of the job to check.
-            
+
         Returns:
             Dict: Job status information including status, result, and error if any.
         """
@@ -486,13 +484,14 @@ class AnyParser:
         while time.time() < start_time + sync_timeout:
             try:
                 job_status = self.get_job_status(file_id)
-                
+
                 if job_status.get("status") == "completed":
                     # Handle presigned URL if present
-                    presigned_url = job_status.get('result_url')
+                    presigned_url = job_status.get("result_url")
                     if presigned_url:
                         try:
                             import requests
+
                             presigned_resp = requests.get(presigned_url)
                             presigned_resp.raise_for_status()
                             result_json = presigned_resp.json()
@@ -505,7 +504,7 @@ class AnyParser:
                         except Exception:
                             # Fall back to inline result if presigned URL fails
                             pass
-                    
+
                     # Handle inline result
                     result = job_status.get("result", {})
                     if "markdown" in result:
@@ -515,7 +514,9 @@ class AnyParser:
                     else:
                         return str(result)
                 elif job_status.get("status") == "failed":
-                    error_msg = job_status.get('error_message') or job_status.get('error', 'Job failed')
+                    error_msg = job_status.get("error_message") or job_status.get(
+                        "error", "Job failed"
+                    )
                     return f"Error: {error_msg}"
                 elif job_status.get("status") in ["pending", "processing"]:
                     print("Waiting for response...")
@@ -523,8 +524,8 @@ class AnyParser:
                     continue
                 else:
                     return f"Unknown status: {job_status.get('status')}"
-                    
+
             except Exception as e:
                 return f"Error fetching results: {e}"
-        
+
         return f"Timeout: Job did not complete within {sync_timeout} seconds"

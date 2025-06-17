@@ -2,8 +2,9 @@ from enum import Enum
 
 # Default URLs for AnyParser
 PUBLIC_SHARED_BASE_URL = "https://anyparser.cambioml.com/api/v1"
-PUBLIC_BATCH_BASE_URL = "http://batch-api.cambioml.com" # TODO: Fix Later
+PUBLIC_BATCH_BASE_URL = "http://batch-api.cambioml.com"  # TODO: Fix Later
 TIMEOUT = 180
+
 
 class ProcessType(Enum):
     EXTRACT_PII = "extract_pii"
@@ -12,4 +13,3 @@ class ProcessType(Enum):
     PARSE = "parse"
     PARSE_PRO = "parse_pro"
     PARSE_TEXTRACT = "parse_textract"
-

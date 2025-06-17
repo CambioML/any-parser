@@ -132,7 +132,7 @@ class ParseTextractSyncParser(BaseSyncParser):
         payload_args = {}
         if extract_args and "extract_tables" in extract_args:
             payload_args["extract_tables"] = extract_args["extract_tables"]
-            
+
         response, info = self.get_sync_response(
             f"{self._base_url}/anyparser/sync_parse_textract",
             file_content=file_content,  # type: ignore
@@ -193,7 +193,7 @@ class ExtractTablesSyncParser(BaseSyncParser):
             f"{self._base_url}/anyparser/sync_extract_tables",
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
-            extract_args={"extract_tables" : True},
+            extract_args={"extract_tables": True},
         )
 
         if response is None:
@@ -220,8 +220,10 @@ class ExtractKeyValueSyncParser(BaseSyncParser):
         # Handle the key-value extraction payload structure
         payload_args = {}
         if extract_args and "extract_instruction" in extract_args:
-            payload_args["extract_input_key_description_pairs"] = extract_args["extract_instruction"]
-            
+            payload_args["extract_input_key_description_pairs"] = extract_args[
+                "extract_instruction"
+            ]
+
         response, info = self.get_sync_response(
             f"{self._base_url}/anyparser/sync_extract_key_value",
             file_content=file_content,  # type: ignore
