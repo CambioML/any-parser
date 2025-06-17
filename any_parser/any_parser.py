@@ -9,13 +9,19 @@ from pathlib import Path
 
 from any_parser.async_parser import AsyncParser
 from any_parser.batch_parser import BatchParser
-from any_parser.constants import (PUBLIC_BATCH_BASE_URL,
-                                  PUBLIC_SHARED_BASE_URL, ProcessType)
-from any_parser.sync_parser import (ExtractKeyValueSyncParser,
-                                    ExtractPIISyncParser,
-                                    ExtractTablesSyncParser,
-                                    ParseProSyncParser, ParseSyncParser,
-                                    ParseTextractSyncParser)
+from any_parser.constants import (
+    PUBLIC_BATCH_BASE_URL,
+    PUBLIC_SHARED_BASE_URL,
+    ProcessType,
+)
+from any_parser.sync_parser import (
+    ExtractKeyValueSyncParser,
+    ExtractPIISyncParser,
+    ExtractTablesSyncParser,
+    ParseProSyncParser,
+    ParseSyncParser,
+    ParseTextractSyncParser,
+)
 from any_parser.utils import validate_file_inputs
 
 
