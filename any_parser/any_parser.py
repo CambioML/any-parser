@@ -13,7 +13,6 @@ from any_parser.constants import ProcessType, PUBLIC_SHARED_BASE_URL, PUBLIC_BAT
 from any_parser.sync_parser import (
     ExtractKeyValueSyncParser,
     ExtractPIISyncParser,
-    ExtractResumeKeyValueSyncParser,
     ExtractTablesSyncParser,
     ParseSyncParser,
     ParseProSyncParser,
@@ -112,9 +111,6 @@ class AnyParser:
         self._sync_parse_pro = ParseProSyncParser(api_key, base_url)
         self._sync_parse_textract = ParseTextractSyncParser(api_key, base_url)
         self._sync_extract_key_value = ExtractKeyValueSyncParser(api_key, base_url)
-        self._sync_extract_resume_key_value = ExtractResumeKeyValueSyncParser(
-            api_key, base_url
-        )
         self._sync_extract_pii = ExtractPIISyncParser(api_key, base_url)
         self._sync_extract_tables = ExtractTablesSyncParser(api_key, base_url)
         self.batches = BatchParser(api_key, batch_url)
@@ -312,13 +308,17 @@ class AnyParser:
 
         Args:
             file_path (str): The path to the file to be parsed.
+            file_content (str): Base64 encoded file content.
+            file_type (str): File format extension.
             extract_instruction (Dict or List): A dictionary containing the keys to be
                 extracted, with their values as the description of those keys.
                 Or a list of dictionaries with 'key' and 'description' fields.
         Returns:
             tuple(str, str): The extracted data and the time taken.
         """
-        # Convert extract_instruction to the correct API format
+        # Convert extract_instruction to the correct API format\
+        if not file_type:
+            file_type = file_path.split('.')[-1] if '.' in file_path else ""
         formatted_instruction = None
         if extract_instruction:
             if isinstance(extract_instruction, dict):
@@ -440,27 +440,14 @@ class AnyParser:
         Returns:
             tuple: (job_id, timing_info) or (error_message, "")
         """
-        # Convert extract_instruction to the correct API format
-        formatted_instruction = None
-        if extract_instruction:
-            if isinstance(extract_instruction, dict):
-                # Convert dict format to list of key-description pairs
-                formatted_instruction = [
-                    {"key": key, "description": description}
-                    for key, description in extract_instruction.items()
-                ]
-            elif isinstance(extract_instruction, list):
-                # Already in correct format
-                formatted_instruction = extract_instruction
-            else:
-                raise ValueError("extract_instruction must be a dict or list")
-        
+        if not file_type:
+            file_type = file_path.split('.')[-1] if '.' in file_path else ""
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_KEY_VALUE,
             file_path=file_path,  # type: ignore
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
-            extract_args={"extract_instruction": formatted_instruction},
+            extract_args={"extract_instruction": extract_instruction},
         )
 
     def get_job_status(self, job_id: str):

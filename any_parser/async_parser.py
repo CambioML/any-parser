@@ -61,13 +61,20 @@ class AsyncParser(BaseParser):
         }
         
         if extract_args:
-            if process_type == ProcessType.EXTRACT_KEY_VALUE and "extract_instruction" in extract_args:
-                # Match the sync implementation exactly: create payload_args dict first
-                payload["extract_input_key_description_pairs"] = extract_args["extract_instruction"]
+            if process_type == ProcessType.EXTRACT_KEY_VALUE:
+                input_keys = list(extract_args['extract_instruction'].keys())
+                input_descriptions = list(extract_args['extract_instruction'].values())
+                extract_instruction = [
+                    {
+                        "key": key,
+                        "description": description
+                    }
+                    for key, description in zip(input_keys, input_descriptions)
+                ]
+                payload["extract_input_key_description_pairs"] = extract_instruction
             elif process_type == ProcessType.EXTRACT_TABLES:
                 payload["extract_tables"] = True
             else:
-                # For other process types, add extract_args directly
                 payload.update(extract_args)
 
         # Send the POST request
