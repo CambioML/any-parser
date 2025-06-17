@@ -25,7 +25,7 @@ class BaseSyncParser(BaseParser):
             "file_type": file_type,
         }
         if extract_args:
-            payload["extract_args"] = extract_args  # type: ignore
+            payload.update(extract_args)
 
         start_time = time.time()
         response = requests.post(
@@ -73,10 +73,71 @@ class ParseSyncParser(BaseSyncParser):
         extract_args=None,
     ):
         response, info = self.get_sync_response(
-            f"{self._base_url}/parse",
+            f"{self._base_url}/anyparser/sync_parse",
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
             extract_args=extract_args,
+        )
+
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            result = response_data["markdown"]
+            return result, f"Time Elapsed: {info}"
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+
+class ParseProSyncParser(BaseSyncParser):
+    """Parse Pro parser implementation for multi-language support."""
+
+    def parse(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_args=None,
+    ):
+        response, info = self.get_sync_response(
+            f"{self._base_url}/anyparser/sync_parse_pro",
+            file_content=file_content,  # type: ignore
+            file_type=file_type,  # type: ignore
+            extract_args=extract_args,
+        )
+
+        if response is None:
+            return info, ""
+
+        try:
+            response_data = response.json()
+            result = response_data["markdown"]
+            return result, f"Time Elapsed: {info}"
+        except json.JSONDecodeError:
+            return f"Error: Invalid JSON response: {response.text}", ""
+
+
+class ParseTextractSyncParser(BaseSyncParser):
+    """Parse Textract parser implementation."""
+
+    def parse(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_args=None,
+    ):
+        # Add extract_tables parameter if provided in extract_args
+        payload_args = {}
+        if extract_args and "extract_tables" in extract_args:
+            payload_args["extract_tables"] = extract_args["extract_tables"]
+            
+        response, info = self.get_sync_response(
+            f"{self._base_url}/anyparser/sync_parse_textract",
+            file_content=file_content,  # type: ignore
+            file_type=file_type,  # type: ignore
+            extract_args=payload_args,
         )
 
         if response is None:
@@ -101,7 +162,7 @@ class ExtractPIISyncParser(BaseSyncParser):
         extract_args=None,
     ):
         response, info = self.get_sync_response(
-            f"{self._base_url}/extract_pii",
+            f"{self._base_url}/anyparser/sync_extract_pii",
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
             extract_args=None,
@@ -112,7 +173,7 @@ class ExtractPIISyncParser(BaseSyncParser):
 
         try:
             response_data = response.json()
-            result = response_data["pii_extraction"]
+            result = response_data["result"]
             return result, f"Time Elapsed: {info}"
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
@@ -129,10 +190,10 @@ class ExtractTablesSyncParser(BaseSyncParser):
         extract_args=None,
     ):
         response, info = self.get_sync_response(
-            f"{self._base_url}/extract_tables",
+            f"{self._base_url}/anyparser/sync_extract_tables",
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
-            extract_args=None,
+            extract_args={"extract_tables" : True},
         )
 
         if response is None:
@@ -156,11 +217,16 @@ class ExtractKeyValueSyncParser(BaseSyncParser):
         file_type=None,
         extract_args=None,
     ):
+        # Handle the key-value extraction payload structure
+        payload_args = {}
+        if extract_args and "extract_instruction" in extract_args:
+            payload_args["extract_input_key_description_pairs"] = extract_args["extract_instruction"]
+            
         response, info = self.get_sync_response(
-            f"{self._base_url}/extract_key_value",
+            f"{self._base_url}/anyparser/sync_extract_key_value",
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
-            extract_args={"extract_instruction": extract_args},
+            extract_args=payload_args,
         )
 
         if response is None:
@@ -168,7 +234,7 @@ class ExtractKeyValueSyncParser(BaseSyncParser):
 
         try:
             response_data = response.json()
-            result = response_data["json"]
+            result = response_data["result"]
             return result, f"Time Elapsed: {info}"
         except json.JSONDecodeError:
             return f"Error: Invalid JSON response: {response.text}", ""
@@ -185,7 +251,7 @@ class ExtractResumeKeyValueSyncParser(BaseSyncParser):
         extract_args=None,
     ):
         response, info = self.get_sync_response(
-            f"{self._base_url}/extract_resume_key_value",
+            f"{self._base_url}/anyparser/sync_extract_resume_key_value",
             file_content=file_content,  # type: ignore
             file_type=file_type,  # type: ignore
             extract_args=None,

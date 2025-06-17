@@ -1,75 +1,47 @@
-"""AnyParser RT: Real-time parser for any data format."""
+"""AnyParser: Real-time parser for any data format."""
 
 import base64
-import json
 import time
 import uuid
 from collections.abc import Iterable
 from io import StringIO
 from pathlib import Path
 
-import requests
-
 from any_parser.async_parser import AsyncParser
 from any_parser.batch_parser import BatchParser
-from any_parser.constants import ProcessType
+from any_parser.constants import ProcessType, PUBLIC_SHARED_BASE_URL, PUBLIC_BATCH_BASE_URL
 from any_parser.sync_parser import (
     ExtractKeyValueSyncParser,
     ExtractPIISyncParser,
     ExtractResumeKeyValueSyncParser,
     ExtractTablesSyncParser,
     ParseSyncParser,
+    ParseProSyncParser,
+    ParseTextractSyncParser,
 )
 from any_parser.utils import validate_file_inputs
-
-PUBLIC_SHARED_BASE_URL = "https://public-api.cambioml.com"
-PUBLIC_BATCH_BASE_URL = "http://batch-api.cambioml.com"
-TIMEOUT = 180
 
 
 def handle_file_processing(func):
     """
-    Decorator to handle common file processing logic for parsing
-    and extraction operations.
+    Decorator to handle file input validation and processing.
 
-    This decorator manages file input validation and processing, supporting
-    either direct file content or file path inputs. It performs base64 encoding
-    of file contents when a file path is provided.
+    Supports both file path and base64 file content inputs. When a file path 
+    is provided, reads and base64-encodes the file content automatically.
 
     Args:
-        func: The decorated function that performs the actual parsing or
-        extraction.
+        func: The decorated function that performs parsing or extraction.
 
-    Parameters for decorated functions:
-        file_path (str, optional): Path to the file to be processed. If
-            provided, the file will be read and encoded in base64.
-        file_content (str, optional): Base64-encoded content of the file. If
-            provided, file_path will be ignored.
-        file_type (str, optional): The file extension/type (e.g., 'pdf').
-            If not provided and file_path is given, it will be inferred from
-            the file extension.
-        *args, **kwargs: Additional arguments passed to the decorated function.
+    Decorated function parameters:
+        file_path (str, optional): Path to the file to process.
+        file_content (str, optional): Base64-encoded file content.
+        file_type (str, optional): File extension (e.g., 'pdf'). Auto-detected from file_path.
 
     Returns:
-        tuple: A tuple containing (error_message, result), where:
-            - error_message (str): Error message if processing fails, empty
-                string on success
-            - result (str): Empty string if error occurs, otherwise the
-                processed result from func
-
-    Usage:
-        @handle_file_processing
-        def parse(self, file_path=None, file_content=None, file_type=None):
-            # Implementation
-            pass
+        tuple: (result, timing_info) on success, (error_message, "") on failure.
 
     Note:
         Either file_path or file_content must be provided, but not both.
-        If file_path is provided, the file content will be read and encoded in
-        base64, and file_type will be inferred from the file extension.
-        If file_content is provided, file_type will be validated, and a
-        temporary file path will be generated for generating presigned url(for
-        async parsing and extraction)
     """
 
     def wrapper(
@@ -133,9 +105,12 @@ class AnyParser:
         Args:
             api_key: Authentication key for API access
             base_url: API endpoint URL, defaults to public endpoint
+            batch_url: Batch API endpoint URL, defaults to public batch endpoint
         """
         self._async_parser = AsyncParser(api_key, base_url)
         self._sync_parse = ParseSyncParser(api_key, base_url)
+        self._sync_parse_pro = ParseProSyncParser(api_key, base_url)
+        self._sync_parse_textract = ParseTextractSyncParser(api_key, base_url)
         self._sync_extract_key_value = ExtractKeyValueSyncParser(api_key, base_url)
         self._sync_extract_resume_key_value = ExtractResumeKeyValueSyncParser(
             api_key, base_url
@@ -164,6 +139,59 @@ class AnyParser:
             tuple: (result, timing_info) or (error_message, "")
         """
         return self._sync_parse.parse(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
+            extract_args=extract_args,
+        )
+
+    @handle_file_processing
+    def parse_pro(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_args=None,
+    ):
+        """Extract full content from a file synchronously using pro model with multi-language support.
+
+        Args:
+            file_path: Path to input file
+            file_content: Base64 encoded file content
+            file_type: File format extension
+            extract_args: Additional extraction parameters
+
+        Returns:
+            tuple: (result, timing_info) or (error_message, "")
+        """
+        return self._sync_parse_pro.parse(
+            file_path=file_path,
+            file_content=file_content,
+            file_type=file_type,
+            extract_args=extract_args,
+        )
+
+    @handle_file_processing
+    def parse_textract(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_tables=False,
+    ):
+        """Extract content from a file synchronously using AWS Textract.
+
+        Args:
+            file_path: Path to input file
+            file_content: Base64 encoded file content
+            file_type: File format extension
+            extract_tables: Whether to extract tables
+
+        Returns:
+            tuple: (result, timing_info) or (error_message, "")
+        """
+        extract_args = {"extract_tables": extract_tables} if extract_tables else None
+        return self._sync_parse_textract.parse(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
@@ -229,12 +257,19 @@ class AnyParser:
         Returns:
             tuple(str, str)
         """
-        extracted_html, time_elapsed = self._sync_extract_tables.extract(
+        extracted_result, time_elapsed = self._sync_extract_tables.extract(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
         )
 
+        # Handle the new result format where tables are in a dict with 'markdown' key
+        if isinstance(extracted_result, dict) and 'markdown' in extracted_result:
+            extracted_html = extracted_result['markdown']
+        else:
+            extracted_html = extracted_result
+
+        # Convert list of HTML strings to a single HTML string
         if isinstance(extracted_html, list):
             extracted_html = AnyParser.flatten_to_string(extracted_html)
 
@@ -244,14 +279,24 @@ class AnyParser:
             except ImportError:
                 raise ImportError("Please install pandas to use CSV return_type")
 
+            # Ensure we have a string for pandas
             if isinstance(extracted_html, list):
                 extracted_html = "".join(str(item) for item in extracted_html)
-
-            df_list = pd.read_html(StringIO(extracted_html))
-            combined_df = pd.concat(df_list, ignore_index=True)
-            csv_output = combined_df.to_csv(index=False)
-
-            return csv_output, time_elapsed
+            
+            # Wrap the HTML tables in a proper HTML structure for pandas
+            html_content = f"<html><body>{extracted_html}</body></html>"
+            
+            try:
+                df_list = pd.read_html(StringIO(html_content))
+                combined_df = pd.concat(df_list, ignore_index=True)
+                csv_output = combined_df.to_csv(index=False)
+                return csv_output, time_elapsed
+            except ValueError as e:
+                if "No tables found" in str(e):
+                    # Return the raw HTML if pandas can't parse it
+                    return extracted_html, time_elapsed
+                else:
+                    raise e
 
         return extracted_html, time_elapsed
 
@@ -267,45 +312,35 @@ class AnyParser:
 
         Args:
             file_path (str): The path to the file to be parsed.
-            extract_instruction (Dict): A dictionary containing the keys to be
+            extract_instruction (Dict or List): A dictionary containing the keys to be
                 extracted, with their values as the description of those keys.
+                Or a list of dictionaries with 'key' and 'description' fields.
         Returns:
             tuple(str, str): The extracted data and the time taken.
         """
+        # Convert extract_instruction to the correct API format
+        formatted_instruction = None
+        if extract_instruction:
+            if isinstance(extract_instruction, dict):
+                # Convert dict format to list of key-description pairs
+                formatted_instruction = [
+                    {"key": key, "description": description}
+                    for key, description in extract_instruction.items()
+                ]
+            elif isinstance(extract_instruction, list):
+                # Already in correct format
+                formatted_instruction = extract_instruction
+            else:
+                raise ValueError("extract_instruction must be a dict or list")
+        
         return self._sync_extract_key_value.extract(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
-            extract_args={"extract_instruction": extract_instruction},
+            extract_args={"extract_instruction": formatted_instruction},
         )
 
-    @handle_file_processing
-    def extract_resume_key_value(
-        self, file_path=None, file_content=None, file_type=None
-    ):
-        """Extract resume in real-time.
-
-        Args:
-            file_path (str): The path to the file to be parsed.
-        Returns:
-            tuple(str, str): The extracted data and the time taken.
-                extracted data includes:
-                    - "education": Education
-                    - "work_experience": Work Experience
-                    - "personal_info": Personal Information
-                    - "skills": Skills
-                    - "certifications": Certifications
-                    - "projects": Projects
-                    - "pii": Personally Identifiable Information - includes
-                        only name, email, and phone
-        """
-        return self._sync_extract_resume_key_value.extract(
-            file_path=file_path,
-            file_content=file_content,
-            file_type=file_type,
-        )
-
-    # Example of decorated methods:
+    # Async methods
     @handle_file_processing
     def async_parse(
         self,
@@ -323,23 +358,38 @@ class AnyParser:
         )
 
     @handle_file_processing
-    def async_parse_with_layout(
-        self, file_path=None, file_content=None, file_type=None
+    def async_parse_pro(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_args=None,
     ):
-        """Extract content from a file asynchronously with layout analysis."""
+        """Extract full content from a file asynchronously using pro model."""
         return self._async_parser.send_async_request(
-            process_type=ProcessType.PARSE_WITH_LAYOUT,
+            process_type=ProcessType.PARSE_PRO,
             file_path=file_path,  # type: ignore
             file_content=file_content,  # type: ignore
+            file_type=file_type,  # type: ignore
+            extract_args=extract_args,
         )
 
     @handle_file_processing
-    def async_parse_with_ocr(self, file_path=None, file_content=None, file_type=None):
-        """Extract full content from a file asynchronously with OCR."""
+    def async_parse_textract(
+        self,
+        file_path=None,
+        file_content=None,
+        file_type=None,
+        extract_tables=False,
+    ):
+        """Extract content from a file asynchronously using AWS Textract."""
+        extract_args = {"extract_tables": extract_tables} if extract_tables else None
         return self._async_parser.send_async_request(
-            process_type=ProcessType.PARSE_WITH_OCR,
+            process_type=ProcessType.PARSE_TEXTRACT,
             file_path=file_path,  # type: ignore
             file_content=file_content,  # type: ignore
+            file_type=file_type,  # type: ignore
+            extract_args=extract_args,
         )
 
     @handle_file_processing
@@ -355,7 +405,8 @@ class AnyParser:
             process_type=ProcessType.EXTRACT_PII,
             file_path=file_path,  # type: ignore
             file_content=file_content,  # type: ignore
-            extract_args=extract_args,
+            file_type=file_type,  # type: ignore
+            extract_args=None,
         )
 
     @handle_file_processing
@@ -365,6 +416,7 @@ class AnyParser:
             process_type=ProcessType.EXTRACT_TABLES,
             file_path=file_path,  # type: ignore
             file_content=file_content,  # type: ignore
+            file_type=file_type,  # type: ignore
         )
 
     @handle_file_processing
@@ -375,72 +427,117 @@ class AnyParser:
         file_type=None,
         extract_instruction=None,
     ):
-        """Extract key-value pairs from a file asynchronously."""
+        """Extract key-value pairs from a file asynchronously.
+        
+        Args:
+            file_path (str): The path to the file to be parsed.
+            file_content (str): Base64 encoded file content.
+            file_type (str): File format extension.
+            extract_instruction (Dict or List): A dictionary containing the keys to be
+                extracted, with their values as the description of those keys.
+                Or a list of dictionaries with 'key' and 'description' fields.
+        
+        Returns:
+            tuple: (job_id, timing_info) or (error_message, "")
+        """
+        # Convert extract_instruction to the correct API format
+        formatted_instruction = None
+        if extract_instruction:
+            if isinstance(extract_instruction, dict):
+                # Convert dict format to list of key-description pairs
+                formatted_instruction = [
+                    {"key": key, "description": description}
+                    for key, description in extract_instruction.items()
+                ]
+            elif isinstance(extract_instruction, list):
+                # Already in correct format
+                formatted_instruction = extract_instruction
+            else:
+                raise ValueError("extract_instruction must be a dict or list")
+        
         return self._async_parser.send_async_request(
             process_type=ProcessType.EXTRACT_KEY_VALUE,
             file_path=file_path,  # type: ignore
             file_content=file_content,  # type: ignore
-            extract_args={"extract_instruction": extract_instruction},
+            file_type=file_type,  # type: ignore
+            extract_args={"extract_instruction": formatted_instruction},
         )
 
-    @handle_file_processing
-    def async_extract_resume_key_value(
-        self, file_path=None, file_content=None, file_type=None
-    ):
-        """Extract resume key-value pairs from a file asynchronously."""
-        return self._async_parser.send_async_request(
-            process_type=ProcessType.EXTRACT_RESUME_KEY_VALUE,
-            file_path=file_path,  # type: ignore
-            file_content=file_content,  # type: ignore
-            extract_args=None,
-        )
+    def get_job_status(self, job_id: str):
+        """Get the status of an async job.
+        
+        Args:
+            job_id (str): The ID of the job to check.
+            
+        Returns:
+            Dict: Job status information including status, result, and error if any.
+        """
+        return self._async_parser.get_job_status(job_id)
 
     def async_fetch(
         self,
         file_id: str,
-        sync: bool = True,
         sync_timeout: int = 180,
-        sync_interval: int = 5,
+        sync_interval: int = 3,
     ) -> str:
         """Fetches extraction results asynchronously.
 
+        Note: This method is kept for backwards compatibility. For new implementations,
+        use get_job_status() with the job_id returned from async methods.
+
         Args:
-            file_id (str): The ID of the file to fetch results for.
-            sync (bool, optional): Whether to wait for the results
-                synchronously.
+            file_id (str): The ID of the job to fetch results for.
             sync_timeout (int, optional): Maximum time to wait for results in
                 seconds. Defaults to 180.
             sync_interval (int, optional): Time interval between polling
-                attempts in seconds. Defaults to 5.
+                attempts in seconds. Defaults to 3.
 
         Returns:
-            str: The extracted results as a markdown string.
-            None: If the extraction is still in progress (when sync is False).
+            str: The extracted results as a markdown string, or error message if failed.
         """
-
-        response = None
-        # Create the JSON payload
-        payload = {"file_id": file_id}
-        if sync:
-            start_time = time.time()
-            while time.time() < start_time + sync_timeout:
-                response = requests.post(
-                    self._async_parser._async_fetch_url,
-                    headers=self._async_parser._headers,
-                    data=json.dumps(payload),
-                    timeout=TIMEOUT,
-                )
-                if response.status_code == 202:
+        start_time = time.time()
+        while time.time() < start_time + sync_timeout:
+            try:
+                job_status = self.get_job_status(file_id)
+                
+                if job_status.get("status") == "completed":
+                    # Handle presigned URL if present
+                    presigned_url = job_status.get('result_url')
+                    if presigned_url:
+                        try:
+                            import requests
+                            presigned_resp = requests.get(presigned_url)
+                            presigned_resp.raise_for_status()
+                            result_json = presigned_resp.json()
+                            if "markdown" in result_json:
+                                return result_json["markdown"]
+                            elif "result" in result_json:
+                                return str(result_json["result"])
+                            else:
+                                return str(result_json)
+                        except Exception:
+                            # Fall back to inline result if presigned URL fails
+                            pass
+                    
+                    # Handle inline result
+                    result = job_status.get("result", {})
+                    if "markdown" in result:
+                        return result["markdown"]
+                    elif "result" in result:
+                        return str(result["result"])
+                    else:
+                        return str(result)
+                elif job_status.get("status") == "failed":
+                    error_msg = job_status.get('error_message') or job_status.get('error', 'Job failed')
+                    return f"Error: {error_msg}"
+                elif job_status.get("status") in ["pending", "processing"]:
                     print("Waiting for response...")
                     time.sleep(sync_interval)
                     continue
-                break
-        else:
-            response = requests.post(
-                self._async_parser._async_fetch_url,
-                headers=self._async_parser._headers,
-                data=json.dumps(payload),
-                timeout=TIMEOUT,
-            )
-
-        return self._async_parser.handle_async_response(response)
+                else:
+                    return f"Unknown status: {job_status.get('status')}"
+                    
+            except Exception as e:
+                return f"Error fetching results: {e}"
+        
+        return f"Timeout: Job did not complete within {sync_timeout} seconds"
