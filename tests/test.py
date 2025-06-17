@@ -1,11 +1,11 @@
 """Testing Synchronous and Asynchronous Extraction"""
 
 import base64
+import json
 import os
 import sys
 import time
 import unittest
-import json
 from pathlib import Path
 
 import Levenshtein
