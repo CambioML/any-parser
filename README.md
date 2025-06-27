@@ -7,6 +7,8 @@
 
 **AnyParser** provides an API to accurately extract unstructured data (e.g., PDFs, images, charts) into a structured format.
 
+###  Note: We recently updated our backend stack on June 2025, please generate a new API Key from the link below!
+
 ## :seedling: Set up your AnyParser API key
 
 To get started, generate your API key from the [Sandbox Account Page](https://www.cambioml.com/account). Each account comes with **100 free pages**.
