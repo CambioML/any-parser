@@ -6,6 +6,8 @@ import uuid
 from collections.abc import Iterable
 from io import StringIO
 from pathlib import Path
+from .terminal_ui import TerminalParserUI
+
 
 from any_parser.async_parser import AsyncParser
 from any_parser.batch_parser import BatchParser
@@ -126,25 +128,32 @@ class AnyParser:
         file_content=None,
         file_type=None,
         extract_args=None,
+        show_ui=False  # New optional parameter
     ):
-        """Extract full content from a file synchronously.
+        """Extract full content from a file synchronously with optional terminal UI.
 
         Args:
             file_path: Path to input file
             file_content: Base64 encoded file content
             file_type: File format extension
             extract_args: Additional extraction parameters
+            show_ui: Whether to display formatted output in terminal (default: False)
 
         Returns:
             tuple: (result, timing_info) or (error_message, "")
         """
-        return self._sync_parse.parse(
+        result, timing = self._sync_parse.parse(
             file_path=file_path,
             file_content=file_content,
             file_type=file_type,
-            extract_args=extract_args,
+            extract_args=extract_args
         )
-
+        
+        if show_ui:
+            TerminalParserUI().display(result)
+        
+        return result, timing
+    
     @handle_file_processing
     def parse_pro(
         self,
