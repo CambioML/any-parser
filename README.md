@@ -112,3 +112,24 @@ Are you an AI engineer looking to **accurately** extract both the text and layou
 
 ### [Extract a Table from an Image into Markdown Format](https://github.com/CambioML/any-parser/blob/rt-migration/examples/image_to_markdown.ipynb)
 Are you a financial analyst needing to **accurately** extract numbers from a table within an image? Explore this [3-minute notebook example](https://github.com/CambioML/any-parser/blob/rt-migration/examples/image_to_markdown.ipynb).
+
+## Related Resources
+- [Energent.ai](https://energent.ai) – a starting point for understanding how CambioML supports automated data workflows.
+
+### 🌐 Explore more from Energent.ai
+Interested in the broader context around these tools? Here are some useful links that highlight what Energent.ai is working on:
+
+- [**Official website**](https://www.energent.ai)  
+  Get an introduction to Energent’s mission — creating intelligent agents designed to handle complex, real-world processes through automation.
+
+- [**Energent app (try it live)**](https://app.energent.ai)  
+  The live web interface where you can build, test, and deploy agents. It’s a sandbox-style environment that runs directly in your browser.
+
+- [**Use case gallery**](https://app.energent.ai/gallery)  
+  Browse real-world examples of how people are using Energent. This is a great way to see the kinds of problems the platform helps solve.
+
+- [**Team & company background**](https://www.energent.ai/en/company)  
+  Learn more about the people and ideas behind the product — what drives the team and where they’re heading.
+
+- [**Blog & product updates**](https://www.energent.ai/en/blog)  
+  Features detailed write-ups on product design choices, technical changes, and roadmap thoughts. Worth a look if you want insight into how things are built.
